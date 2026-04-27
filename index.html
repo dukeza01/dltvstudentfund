@@ -1418,9 +1418,6 @@ function deleteStudent(idx) {
   deleteStudentFromSheet(sid);
 }
 
-// ============ INIT ============
-// ล้างรูปภาพเก่าที่บันทึกในเครื่องก่อนเริ่ม
-localStorage.removeItem('dltv_student_photos');
 loadFromStorage();
 renderDashboard();
 renderStudents();
