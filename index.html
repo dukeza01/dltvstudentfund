@@ -168,6 +168,29 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
 .detail-card-title{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.3px}
 
 /* SEMESTER RECORDS */
+/* BEHAVIOR LOG */
+.behavior-log{display:flex;flex-direction:column;gap:10px}
+.behavior-entry{background:var(--bg4);border:1px solid var(--border);border-radius:var(--rad-lg);overflow:hidden}
+.behavior-entry-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);cursor:pointer}
+.behavior-entry-date{font-size:12px;font-weight:700;color:var(--text2);font-family:'IBM Plex Mono',monospace}
+.behavior-entry-title{font-size:13px;font-weight:600;flex:1}
+.behavior-cat{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:600}
+.bcat-positive{background:#EAF3DC;color:var(--green)}
+.bcat-concern{background:#FAF0DC;color:var(--amber)}
+.bcat-negative{background:#FBECEC;color:var(--red)}
+.bcat-info{background:var(--blue-lt);color:var(--blue)}
+.behavior-entry-body{display:none;padding:14px;border-top:1px solid var(--border)}
+.behavior-entry-body.open{display:block}
+.behavior-score-bar{display:flex;align-items:center;gap:8px;margin-top:4px}
+.behavior-score-btn{width:30px;height:30px;border:1px solid var(--border2);border-radius:50%;background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.behavior-score-btn:hover{background:var(--bg3)}
+.behavior-score-val{font-size:18px;font-weight:700;width:36px;text-align:center}
+.behavior-summary-card{background:var(--bg4);border:1px solid var(--border);border-radius:var(--rad-lg);padding:14px 16px;margin-bottom:14px}
+.behavior-summary-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.behavior-stat{text-align:center;min-width:60px}
+.behavior-stat-val{font-size:22px;font-weight:700;line-height:1}
+.behavior-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase}
+
 .sem-records{display:flex;flex-direction:column;gap:10px}
 .sem-record{background:var(--bg2);border-radius:var(--rad-lg);border:1px solid var(--border);overflow:hidden}
 .sem-record-header{display:flex;align-items:center;padding:10px 14px;background:var(--bg3);gap:10px;cursor:pointer}
@@ -434,6 +457,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
       <button class="detail-tab" onclick="switchTab('st',3,this)">บัญชีธนาคาร</button>
       <button class="detail-tab" onclick="switchTab('st',4,this)">ประวัติการเงิน</button>
       <button class="detail-tab" onclick="switchTab('st',5,this)">ประวัติ GPA</button>
+      <button class="detail-tab" onclick="switchTab('st',6,this)">📋 บันทึกพฤติกรรม</button>
     </div>
     <div id="st-panel-0" class="detail-panel active"></div>
     <div id="st-panel-1" class="detail-panel"></div>
@@ -441,6 +465,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
     <div id="st-panel-3" class="detail-panel"></div>
     <div id="st-panel-4" class="detail-panel"></div>
     <div id="st-panel-5" class="detail-panel"></div>
+    <div id="st-panel-6" class="detail-panel"></div>
   </div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('student-modal')">ปิด</button>
@@ -486,6 +511,7 @@ DB = {students: RAW.map(s => {
     weakSubjects: s.gpa.weakSubjects||'',
     schoolSupport: s.gpa.schoolSupport||''
   }];
+  if(!s.behaviorLogs) s.behaviorLogs = [];
   return s;
 })};
 
@@ -903,6 +929,9 @@ function openStudentDetail(idx){
   // Panel 5: GPA history
   renderGpaPanel(idx);
 
+  // Panel 6: Behavior log
+  renderBehaviorPanel(idx);
+
   document.getElementById('student-modal').classList.add('open');
   switchTab('st',0,document.querySelector('.detail-tab'));
 }
@@ -977,7 +1006,148 @@ function renderGpaPanel(idx){
   document.getElementById('st-panel-5').innerHTML=html;
 }
 
-function toggleSemRecord(el){
+function renderBehaviorPanel(idx){
+  const s = DB.students[idx];
+  if (!s.behaviorLogs) s.behaviorLogs = [];
+  const logs = s.behaviorLogs;
+
+  // คำนวณสรุป
+  const totalPos = logs.filter(l=>l.category==='positive').length;
+  const totalCon = logs.filter(l=>l.category==='concern').length;
+  const totalNeg = logs.filter(l=>l.category==='negative').length;
+  const totalInfo = logs.filter(l=>l.category==='info').length;
+  const avgScore = logs.length ? (logs.reduce((a,l)=>a+(l.score||0),0)/logs.length).toFixed(1) : '-';
+
+  const catLabel = {positive:'เชิงบวก', concern:'น่าห่วงใย', negative:'เชิงลบ', info:'ทั่วไป'};
+  const catClass = {positive:'bcat-positive', concern:'bcat-concern', negative:'bcat-negative', info:'bcat-info'};
+  const catIcon  = {positive:'✅', concern:'⚠️', negative:'🔴', info:'📝'};
+
+  let html = `
+  <div class="behavior-summary-card">
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px">สรุปพฤติกรรม (${logs.length} รายการ)</div>
+    <div class="behavior-summary-row">
+      <div class="behavior-stat"><div class="behavior-stat-val" style="color:var(--green)">${totalPos}</div><div class="behavior-stat-lbl">เชิงบวก</div></div>
+      <div class="behavior-stat"><div class="behavior-stat-val" style="color:var(--amber)">${totalCon}</div><div class="behavior-stat-lbl">น่าห่วงใย</div></div>
+      <div class="behavior-stat"><div class="behavior-stat-val" style="color:var(--red)">${totalNeg}</div><div class="behavior-stat-lbl">เชิงลบ</div></div>
+      <div class="behavior-stat"><div class="behavior-stat-val" style="color:var(--blue)">${totalInfo}</div><div class="behavior-stat-lbl">ทั่วไป</div></div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:28px;font-weight:700;color:var(--text);line-height:1">${avgScore}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase">คะแนนเฉลี่ย</div>
+      </div>
+    </div>
+  </div>
+  <div class="behavior-log">`;
+
+  if(logs.length === 0){
+    html += `<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">
+      <div style="font-size:32px;margin-bottom:8px">📋</div>
+      ยังไม่มีบันทึกพฤติกรรม<br><small>กดปุ่มด้านล่างเพื่อเพิ่มรายการแรก</small></div>`;
+  } else {
+    // เรียงตามวันล่าสุดก่อน
+    const sorted = [...logs].map((l,i)=>({...l,_i:i})).sort((a,b)=>b.date.localeCompare(a.date));
+    sorted.forEach(l => {
+      const li = l._i;
+      html += `
+      <div class="behavior-entry">
+        <div class="behavior-entry-header" onclick="toggleBehavior(this)">
+          <span class="behavior-entry-date">${l.date||'-'}</span>
+          <span class="behavior-cat ${catClass[l.category]||'bcat-info'}">${catIcon[l.category]||'📝'} ${catLabel[l.category]||'ทั่วไป'}</span>
+          <span class="behavior-entry-title">${escHtml(l.title||'(ไม่มีหัวข้อ)')}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text2)">คะแนน: ${l.score!=null?l.score:'-'}</span>
+          <span style="font-size:16px;color:var(--text3);margin-left:4px">▾</span>
+        </div>
+        <div class="behavior-entry-body">
+          <div class="form-grid">
+            <div class="fg"><label>วันที่บันทึก</label>
+              <input type="date" value="${l.date||''}" onchange="DB.students[${idx}].behaviorLogs[${li}].date=this.value;renderBehaviorPanel(${idx})">
+            </div>
+            <div class="fg"><label>ประเภท</label>
+              <select onchange="DB.students[${idx}].behaviorLogs[${li}].category=this.value;renderBehaviorPanel(${idx})">
+                ${['positive','concern','negative','info'].map(c=>`<option value="${c}" ${l.category===c?'selected':''}>${catIcon[c]} ${catLabel[c]}</option>`).join('')}
+              </select>
+            </div>
+            <div class="fg fg-full"><label>หัวข้อ / เหตุการณ์</label>
+              <input value="${escHtml(l.title||'')}" onchange="DB.students[${idx}].behaviorLogs[${li}].title=this.value">
+            </div>
+            <div class="fg fg-full"><label>รายละเอียด</label>
+              <textarea rows="3" onchange="DB.students[${idx}].behaviorLogs[${li}].detail=this.value">${escHtml(l.detail||'')}</textarea>
+            </div>
+            <div class="fg"><label>ผู้บันทึก</label>
+              <input value="${escHtml(l.recorder||'')}" onchange="DB.students[${idx}].behaviorLogs[${li}].recorder=this.value">
+            </div>
+            <div class="fg"><label>สถานที่ / บริบท</label>
+              <input value="${escHtml(l.location||'')}" onchange="DB.students[${idx}].behaviorLogs[${li}].location=this.value">
+            </div>
+            <div class="fg"><label>คะแนน (0–10)</label>
+              <div class="behavior-score-bar">
+                <button class="behavior-score-btn" onclick="adjustScore(${idx},${li},-1)">−</button>
+                <span class="behavior-score-val" id="bscore-${idx}-${li}">${l.score!=null?l.score:5}</span>
+                <button class="behavior-score-btn" onclick="adjustScore(${idx},${li},1)">+</button>
+              </div>
+            </div>
+            <div class="fg"><label>การติดตาม / การดำเนินการ</label>
+              <input value="${escHtml(l.followUp||'')}" onchange="DB.students[${idx}].behaviorLogs[${li}].followUp=this.value">
+            </div>
+            <div class="fg fg-full" style="display:flex;gap:8px;justify-content:flex-end">
+              <button class="btn btn-sm" onclick="saveBehaviorEntry(${idx},${li})">💾 บันทึก</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteBehaviorEntry(${idx},${li})">🗑 ลบ</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `</div>
+  <button class="sem-add-btn" style="margin-top:10px" onclick="addBehaviorEntry(${idx})">+ เพิ่มบันทึกพฤติกรรม</button>`;
+  document.getElementById('st-panel-6').innerHTML = html;
+}
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleBehavior(el){
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function addBehaviorEntry(idx){
+  if(!DB.students[idx].behaviorLogs) DB.students[idx].behaviorLogs=[];
+  const today = new Date().toISOString().slice(0,10);
+  DB.students[idx].behaviorLogs.push({
+    date: today, category:'info', title:'', detail:'', recorder:'', location:'', score:5, followUp:''
+  });
+  renderBehaviorPanel(idx);
+  // เปิด entry ล่าสุด (เรียง date ล่าสุดขึ้นก่อน ดังนั้น entry ใหม่อยู่บน)
+  setTimeout(()=>{
+    const bodies=document.querySelectorAll('#st-panel-6 .behavior-entry-body');
+    if(bodies.length) bodies[0].classList.add('open');
+  },50);
+}
+
+function adjustScore(idx, li, delta){
+  const s = DB.students[idx];
+  if(!s.behaviorLogs[li]) return;
+  const cur = s.behaviorLogs[li].score != null ? s.behaviorLogs[li].score : 5;
+  s.behaviorLogs[li].score = Math.max(0, Math.min(10, cur + delta));
+  const el = document.getElementById(`bscore-${idx}-${li}`);
+  if(el) el.textContent = s.behaviorLogs[li].score;
+}
+
+function saveBehaviorEntry(idx, li){
+  saveToStorage();
+  showStatus('✅ บันทึกพฤติกรรมแล้ว', 'success');
+  renderBehaviorPanel(idx);
+}
+
+function deleteBehaviorEntry(idx, li){
+  if(!confirm('ยืนยันการลบบันทึกนี้?')) return;
+  DB.students[idx].behaviorLogs.splice(li,1);
+  saveToStorage();
+  renderBehaviorPanel(idx);
+}
+
+
   const body=el.nextElementSibling;
   body.classList.toggle('open');
 }
@@ -1019,7 +1189,7 @@ function switchTab(prefix,idx,btn){
   const tabs=btn.closest('.detail-tabs').querySelectorAll('.detail-tab');
   tabs.forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  for(let i=0;i<6;i++){const el=document.getElementById(`${prefix}-panel-${i}`);if(el)el.classList.toggle('active',i===idx);}
+  for(let i=0;i<7;i++){const el=document.getElementById(`${prefix}-panel-${i}`);if(el)el.classList.toggle('active',i===idx);}
 }
 function saveAndRefresh(){saveToStorage();closeModal('student-modal');renderStudents();renderDashboard();}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1207,6 +1377,7 @@ function switchPhotoSource(type, btn, idx) {
 
 // ============ LOCAL STORAGE PERSISTENCE ============
 const STORAGE_KEY = 'dltv_student_photos';
+const BEHAVIOR_KEY = 'dltv_behavior_logs';
 
 function compressDataUrl(dataUrl, maxWidth=300) {
   return new Promise(resolve => {
@@ -1227,12 +1398,11 @@ function compressDataUrl(dataUrl, maxWidth=300) {
 }
 
 async function saveToStorage() {
-  // Save only photoUrl fields (base64 or URL) keyed by student ID
+  // Save photoUrl fields
   try {
     const photos = {};
     for (const s of DB.students) {
       if (s.photoUrl) {
-        // ย่อขนาด base64 ก่อนบันทึกเพื่อประหยัด storage
         photos[s.id || s.no] = s.photoUrl.startsWith('data:')
           ? await compressDataUrl(s.photoUrl)
           : s.photoUrl;
@@ -1241,7 +1411,6 @@ async function saveToStorage() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
     } catch(e) {
-      // Storage full: ลองบันทึกแค่ URL (ไม่รวม base64)
       const urlOnlyPhotos = {};
       for (const [k,v] of Object.entries(photos)) {
         if (!v.startsWith('data:')) urlOnlyPhotos[k] = v;
@@ -1256,17 +1425,42 @@ async function saveToStorage() {
   } catch(e) {
     console.warn('saveToStorage error:', e);
   }
+
+  // Save behaviorLogs separately
+  try {
+    const behaviors = {};
+    DB.students.forEach(s => {
+      if (s.behaviorLogs && s.behaviorLogs.length > 0) {
+        behaviors[s.id || s.no] = s.behaviorLogs;
+      }
+    });
+    localStorage.setItem(BEHAVIOR_KEY, JSON.stringify(behaviors));
+  } catch(e) {
+    console.warn('behaviorLogs save error:', e);
+  }
 }
 
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const photos = JSON.parse(raw);
-    DB.students.forEach(s => {
-      const key = s.id || s.no;
-      if (photos[key]) s.photoUrl = photos[key];
-    });
+    if (raw) {
+      const photos = JSON.parse(raw);
+      DB.students.forEach(s => {
+        const key = s.id || s.no;
+        if (photos[key]) s.photoUrl = photos[key];
+      });
+    }
+  } catch(e) {}
+
+  try {
+    const braw = localStorage.getItem(BEHAVIOR_KEY);
+    if (braw) {
+      const behaviors = JSON.parse(braw);
+      DB.students.forEach(s => {
+        const key = s.id || s.no;
+        if (behaviors[key]) s.behaviorLogs = behaviors[key];
+      });
+    }
   } catch(e) {}
 }
 
