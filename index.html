@@ -64,8 +64,17 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
 .btn-danger{color:var(--red);border-color:transparent}
 .btn-danger:hover{background:var(--red-lt)}
 .btn-sm{padding:4px 10px;font-size:11px}
-.btn-success{background:var(--teal);color:#fff;border-color:var(--teal)}
-.btn-success:hover{background:#0a5240}
+/* ปุ่มสีเขียว สำหรับการ "เพิ่ม" */
+<button class="btn btn-success" onclick="openNewStudent()">+ เพิ่มนักเรียน</button>
+.btn-success:hover {background: #218838; border-color: #1e7e34;}
+
+/* ปุ่มสีเหลือง สำหรับการ "แก้ไข" */
+.btn-warning {background: #ffc107; color: #212529; border-color: #ffc107;}
+.btn-warning:hover {background: #e0a800; border-color: #d39e00;}
+
+/* ปุ่มสีแดง สำหรับการ "ลบ" (แก้ให้เป็นสีแดงทึบ) */
+.btn-danger {background: #dc3545; color: #fff; border-color: #dc3545;}
+.btn-danger:hover {background: #c82333; border-color: #bd2130;}
 
 /* SEARCH */
 .search-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -329,7 +338,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
       <button class="view-btn active" id="vbtn-card" onclick="setView('card',this)">⊞ Card</button>
       <button class="view-btn" id="vbtn-table" onclick="setView('table',this)">☰ Table</button>
     </div>
-    <button class="btn btn-primary" onclick="openNewStudent()">+ เพิ่มนักเรียน</button>
+    <button class="btn btn-primary" onclick="openNewStudent()">+ เพิ่มนักเรียน<const ns={no:DB.students.length+1,id:'',name:'',nickname:'',dob:'',phone:'',parent:'',parentPhone:'',gpa_p6:0,school_p6:'',school_m1:'',province:'',org:'',behavior:'',photoUrl:'', ... };/button>
   </div>
   <div class="search-row">
     <input type="text" id="std-search" placeholder="🔍 ค้นหาชื่อ / ชื่อเล่น / เลขบัตร..." oninput="renderStudents()">
@@ -851,6 +860,10 @@ function openStudentDetail(idx){
         <div class="fg fg-full"><label>โรงเรียน ม.1 (ปัจจุบัน)</label><input value="${s.school_m1||''}" onchange="DB.students[${idx}].school_m1=this.value"></div>
         <div class="fg"><label>จังหวัด</label><input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
         <div class="fg"><label>สังกัด</label><input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
+        <div class="fg fg-full">
+  <label>พฤติกรรมนักเรียน</label>
+  <textarea placeholder="กรอกข้อมูลพฤติกรรมของนักเรียนที่นี่..." onchange="DB.students[${idx}].behavior=this.value">${s.behavior||''}</textarea>
+</div>
         <div class="fg fg-full"><label>รูปภาพ</label>
           <div class="photo-section">
             <div class="photo-preview-box">
@@ -1020,13 +1033,15 @@ function toggleSemRecord(el){
 function addSemPayment(idx){
   if(!DB.students[idx].semPayments) DB.students[idx].semPayments=[];
   DB.students[idx].semPayments.push({term:'',p1:0,p2:0,item1:'ค่าเงินบำรุงการศึกษา',item2:'ค่าใช้จ่ายในการเรียน'});
-  renderPaymentPanel(idx);
+  html+=`</div>
+<button class="btn btn-success" style="width:100%; margin-top:10px; padding:10px;" onclick="addSemPayment(${idx})">+ เพิ่มข้อมูลภาคเรียนใหม่</button>`;
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-4 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 function addSemGpa(idx){
   if(!DB.students[idx].semGpa) DB.students[idx].semGpa=[];
   DB.students[idx].semGpa.push({term:'',gpa:0,riskLevel:'ปานกลาง',hasObstacle:false,obstacleType:'',weakSubjects:'',schoolSupport:''});
-  renderGpaPanel(idx);
+  html+=`</div>
+<button class="btn btn-success" style="width:100%; margin-top:10px; padding:10px;" onclick="addSemGpa(${idx})">+ เพิ่ม GPA ภาคเรียนใหม่</button>`;
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-5 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 function refreshModalHeader(idx){
