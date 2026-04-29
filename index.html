@@ -1254,6 +1254,7 @@ function switchPhotoSource(type, btn, idx) {
 
 // ============ LOCAL STORAGE PERSISTENCE ============
 const STORAGE_KEY = 'dltv_student_photos';
+const STORAGE_KEY_DATA = 'dltv_students_data';
 
 function compressDataUrl(dataUrl, maxWidth=300) {
   return new Promise(resolve => {
@@ -1275,6 +1276,18 @@ function compressDataUrl(dataUrl, maxWidth=300) {
 
 async function saveToStorage() {
   try {
+    // ---- 1. บันทึกข้อมูลนักเรียนทั้งหมด (ไม่รวมรูป base64 เพื่อประหยัดพื้นที่) ----
+    const studentsToSave = DB.students.map(s => ({
+      ...s,
+      photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl || '')
+    }));
+    try {
+      localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(studentsToSave));
+    } catch(e) {
+      console.warn('saveToStorage: student data too large, skipping:', e.message);
+    }
+
+    // ---- 2. บันทึกรูปภาพแยกต่างหาก ----
     const photos = {};
     for (const s of DB.students) {
       if (s.photoUrl) {
@@ -1292,7 +1305,7 @@ async function saveToStorage() {
       }
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(urlOnlyPhotos));
-        showStatus('⚠️ พื้นที่จัดเก็บเต็ม: บันทึก URL เท่านั้น', 'info');
+        showStatus('⚠️ พื้นที่จัดเก็บเต็ม: บันทึก URL รูปเท่านั้น', 'info');
       } catch(e2) {
         console.warn('Storage full, photos not saved:', e2.message);
       }
@@ -1304,14 +1317,43 @@ async function saveToStorage() {
 
 function loadFromStorage() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const photos = JSON.parse(raw);
-    DB.students.forEach(s => {
-      const key = s.id || s.no;
-      if (photos[key]) s.photoUrl = photos[key];
-    });
-  } catch(e) {}
+    // ---- 1. โหลดข้อมูลนักเรียนทั้งหมดจาก storage (ถ้ามี) ----
+    const rawData = localStorage.getItem(STORAGE_KEY_DATA);
+    if (rawData) {
+      const savedStudents = JSON.parse(rawData);
+      if (Array.isArray(savedStudents) && savedStudents.length > 0) {
+        // Migrate: ตรวจสอบ semPayments / semGpa ให้ครบ
+        DB.students = savedStudents.map(s => {
+          if (!s.semPayments) s.semPayments = [{
+            term: s.payment?.term || '1/2568',
+            p1: s.payment?.p1 || 0, p2: s.payment?.p2 || 0,
+            item1: s.payment?.item1 || '', item2: s.payment?.item2 || ''
+          }];
+          if (!s.semGpa) s.semGpa = [{
+            term: '1/2568',
+            gpa: s.gpa?.gpa || 0, riskLevel: s.gpa?.riskLevel || 'ปานกลาง',
+            hasObstacle: s.gpa?.hasObstacle || false,
+            obstacleType: s.gpa?.obstacleType || '',
+            weakSubjects: s.gpa?.weakSubjects || '',
+            schoolSupport: s.gpa?.schoolSupport || ''
+          }];
+          return s;
+        });
+      }
+    }
+
+    // ---- 2. โหลดรูปภาพแยกมาใส่ทับ (รูปอาจมีขนาดใหญ่กว่า) ----
+    const rawPhotos = localStorage.getItem(STORAGE_KEY);
+    if (rawPhotos) {
+      const photos = JSON.parse(rawPhotos);
+      DB.students.forEach(s => {
+        const key = s.id || s.no;
+        if (photos[key]) s.photoUrl = photos[key];
+      });
+    }
+  } catch(e) {
+    console.warn('loadFromStorage error:', e);
+  }
 }
 
 // Google Sheet connector functions
@@ -1350,7 +1392,8 @@ async function loadFromSheet() {
     });
     isConnected = true;
     updateSyncStatus(true);
-    loadFromStorage();
+    loadFromStorage(); // โหลดรูปภาพที่เคย save ไว้ทับ
+    saveToStorage();   // บันทึกข้อมูลจาก Sheet ลง localStorage
     renderDashboard(); renderStudents(); populateFilters();
     showStatus('✅ โหลดข้อมูลสำเร็จ — ' + DB.students.length + ' คน', 'success');
   } catch (err) {
