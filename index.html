@@ -861,6 +861,8 @@ function openStudentDetail(idx){
         <div class="fg"><label>จังหวัด</label><input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
         <div class="fg"><label>สังกัด</label><input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
         <div class="fg fg-full">
+  <label>ชื่อ - สกุล พี่เลี้ยง</label><textarea placeholder="กรอกข้อมูลชื่อ - สกุล..." onchange="DB.students[${idx}].behavior=this.value">${s.behavior||''}</textarea>
+  <label>ตำแหน่ง</label><textarea placeholder="กรอกข้อมูลตำแหน่ง" onchange="DB.students[${idx}].behavior=this.value">${s.behavior||''}</textarea>
   <label>พฤติกรรมนักเรียน</label>
   <textarea placeholder="กรอกข้อมูลพฤติกรรมของนักเรียนที่นี่..." onchange="DB.students[${idx}].behavior=this.value">${s.behavior||''}</textarea>
 </div>
