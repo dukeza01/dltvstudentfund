@@ -69,12 +69,12 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
 .btn-success:hover {background: #218838; border-color: #1e7e34;}
 
 /* ปุ่มสีเหลือง สำหรับการ "แก้ไข" */
-.btn-warning {background: #e0a800 !important; color: #212529 !important; border-color: #e0a800 !important;}
-.btn-warning:hover {background: #c89000 !important; border-color: #c89000 !important;}
+.btn-warning {background: #ffc107; color: #212529; border-color: #ffc107;}
+.btn-warning:hover {background: #e0a800; border-color: #d39e00;}
 
 /* ปุ่มสีแดง สำหรับการ "ลบ" (แก้ให้เป็นสีแดงทึบ) */
-.btn-danger {background: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important;}
-.btn-danger:hover {background: #c82333 !important; border-color: #bd2130 !important;}
+.btn-danger {background: #dc3545; color: #fff; border-color: #dc3545;}
+.btn-danger:hover {background: #c82333; border-color: #bd2130;}
 
 /* SEARCH */
 .search-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -406,9 +406,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
     <select id="pay-filter-term" onchange="renderPayment()" style="padding:7px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg4)">
       <option value="">ทุกภาคเรียน</option>
     </select>
-    <button class="btn btn-primary" onclick="openAddPaymentModal()">+ เพิ่มข้อมูลการจ่ายเงิน</button>
   </div>
-  <div id="pay-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px"></div>
   <div class="search-row">
     <input type="text" id="pay-search" placeholder="🔍 ค้นหาชื่อ..." oninput="renderPayment()">
   </div>
@@ -419,23 +417,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
     </table>
     <div class="tbl-footer" id="payment-footer"></div>
   </div>
-</div>
-
-<!-- PAYMENT EDIT MODAL -->
-<div class="modal-overlay" id="pay-modal" onclick="if(event.target===this)closeModal('pay-modal')">
-<div class="modal" style="max-width:520px">
-  <div class="modal-header">
-    <div class="modal-title" id="pay-modal-title">แก้ไขข้อมูลการจ่ายเงิน</div>
-    <button class="modal-close" onclick="closeModal('pay-modal')">×</button>
-  </div>
-  <div class="modal-body">
-    <div id="pay-modal-body"></div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn" onclick="closeModal('pay-modal')">ยกเลิก</button>
-    <button class="btn btn-primary" onclick="savePaymentModal()">💾 บันทึก</button>
-  </div>
-</div>
 </div>
 
 <!-- ACADEMIC -->
@@ -626,7 +607,7 @@ function showPage(p,btn){
   else if(p==='students'){populateFilters();renderStudents();}
   else if(p==='address') renderAddress();
   else if(p==='banking') renderBanking();
-  else if(p==='payment'){populateTermFilter();renderPaymentSummary();renderPayment();}
+  else if(p==='payment'){populateTermFilter();renderPayment();}
   else if(p==='academic'){populateGpaTerm();renderAcademic();}
 }
 
@@ -1078,13 +1059,15 @@ function toggleSemRecord(el){
 function addSemPayment(idx){
   if(!DB.students[idx].semPayments) DB.students[idx].semPayments=[];
   DB.students[idx].semPayments.push({term:'',p1:0,p2:0,item1:'ค่าเงินบำรุงการศึกษา',item2:'ค่าใช้จ่ายในการเรียน'});
-  renderPaymentPanel(idx);
+  html+=`</div>
+<button class="btn btn-success" style="width:100%; margin-top:10px; padding:10px;" onclick="addSemPayment(${idx})">+ เพิ่มข้อมูลภาคเรียนใหม่</button>`;
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-4 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 function addSemGpa(idx){
   if(!DB.students[idx].semGpa) DB.students[idx].semGpa=[];
   DB.students[idx].semGpa.push({term:'',gpa:0,riskLevel:'ปานกลาง',hasObstacle:false,obstacleType:'',weakSubjects:'',schoolSupport:''});
-  renderGpaPanel(idx);
+  html+=`</div>
+<button class="btn btn-success" style="width:100%; margin-top:10px; padding:10px;" onclick="addSemGpa(${idx})">+ เพิ่ม GPA ภาคเรียนใหม่</button>`;
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-5 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 function refreshModalHeader(idx){
@@ -1166,160 +1149,34 @@ function renderBanking(){
 }
 
 // ============ PAYMENT ============
-let _payEditCtx = null; // {studentIdx, payIdx}
-
 function populateTermFilter(){
   const terms=new Set();
   DB.students.forEach(s=>s.semPayments&&s.semPayments.forEach(p=>terms.add(p.term)));
   const sel=document.getElementById('pay-filter-term');
-  // rebuild options
-  while(sel.options.length>1) sel.remove(1);
-  [...terms].sort().forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=`ภาคเรียน ${t}`;sel.appendChild(o);});
+  if(sel.options.length<=1)[...terms].sort().forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=`ภาคเรียน ${t}`;sel.appendChild(o);});
 }
-
-function renderPaymentSummary(){
-  const termMap={};
-  DB.students.forEach(s=>{
-    (s.semPayments||[]).forEach(p=>{
-      if(!termMap[p.term]) termMap[p.term]={p1:0,p2:0,count:0};
-      termMap[p.term].p1+=(p.p1||0);
-      termMap[p.term].p2+=(p.p2||0);
-      if((p.p1||0)+(p.p2||0)>0) termMap[p.term].count++;
-    });
-  });
-  const colors=['var(--blue)','var(--teal)','var(--amber)','var(--red)'];
-  document.getElementById('pay-summary-cards').innerHTML=Object.entries(termMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([term,d],i)=>{
-    const total=d.p1+d.p2;
-    const c=colors[i%colors.length];
-    return`<div class="metric" style="border-top:3px solid ${c}">
-      <div class="metric-lbl">ภาคเรียน ${term}</div>
-      <div class="metric-val" style="color:${c};font-size:18px">${fmt(total)}</div>
-      <div class="metric-sub">บาท (${d.count} คน)</div>
-      <div style="margin-top:6px;font-size:11px;color:var(--text2)">
-        ส่วนที่ 1: ${fmt(d.p1)} &bull; ส่วนที่ 2: ${fmt(d.p2)}
-      </div>
-    </div>`;
-  }).join('');
-}
-
 function renderPayment(){
-  populateTermFilter();
-  renderPaymentSummary();
   const q=(document.getElementById('pay-search').value||'').toLowerCase();
   const ft=document.getElementById('pay-filter-term').value;
   let rows=[];
   DB.students.forEach(s=>{
-    if(q && !s.name.toLowerCase().includes(q)) return;
-    const recs=s.semPayments||[{term:s.payment?.term||'1/2568',p1:s.payment?.p1||0,p2:s.payment?.p2||0,item1:s.payment?.item1||'',item2:s.payment?.item2||''}];
-    recs.forEach((p,pi)=>{
-      if(!ft||p.term===ft) rows.push({s,p,pi});
-    });
+    if(!s.name.toLowerCase().includes(q)&&q) return;
+    const recs=s.semPayments||[{term:s.payment.term,p1:s.payment.p1||0,p2:s.payment.p2||0,item1:s.payment.item1,item2:s.payment.item2}];
+    recs.filter(p=>!ft||p.term===ft).forEach(p=>{rows.push({s,p});});
   });
   const totalAll=rows.reduce((a,{p})=>a+(p.p1||0)+(p.p2||0),0);
-  document.getElementById('payment-tbody').innerHTML=rows.map(({s,p,pi})=>{
+  document.getElementById('payment-tbody').innerHTML=rows.map(({s,p})=>{
     const idx=DB.students.indexOf(s);
     const total=(p.p1||0)+(p.p2||0);
-    return`<tr>
-      <td>${s.no}</td>
-      <td style="font-weight:600">${s.name}<br><span style="font-size:11px;color:var(--text3)">${s.nickname}</span></td>
+    return`<tr><td>${s.no}</td><td style="font-weight:600">${s.name}</td>
       <td><span class="badge b-gray">${p.term||'-'}</span></td>
-      <td style="font-weight:600;color:var(--blue)">${fmt(p.p1||0)}</td>
-      <td style="font-weight:600;color:var(--teal)">${fmt(p.p2||0)}</td>
-      <td style="font-weight:700;color:var(--amber)">${fmt(total)}</td>
+      <td>${fmt(p.p1||0)}</td><td>${fmt(p.p2||0)}</td>
+      <td style="font-weight:700;color:var(--teal)">${fmt(total)}</td>
       <td style="font-size:12px">${p.item1||'-'}</td>
       <td style="font-size:12px">${p.item2||'-'}</td>
-      <td>
-        <button class="btn btn-sm btn-warning" onclick="openEditPaymentModal(${idx},${pi})">✏️ แก้ไข</button>
-        <button class="btn btn-sm btn-danger" onclick="deletePaymentRow(${idx},${pi})">🗑</button>
-      </td>
-    </tr>`;
+      <td><button class="btn btn-sm" onclick="openStudentDetail(${idx});switchTabByName('ประวัติการเงิน')">แก้ไข</button></td></tr>`;
   }).join('');
   document.getElementById('payment-footer').textContent=`แสดง ${rows.length} รายการ • รวม ${fmt(totalAll)} บาท`;
-}
-
-function openAddPaymentModal(){
-  _payEditCtx=null;
-  document.getElementById('pay-modal-title').textContent='เพิ่มข้อมูลการจ่ายเงิน';
-  document.getElementById('pay-modal-body').innerHTML=`
-    <div class="form-grid" style="gap:12px">
-      <div class="fg fg-full"><label>นักเรียน</label>
-        <select id="pm-student" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)">
-          ${DB.students.map((s,i)=>`<option value="${i}">${s.no}. ${s.name}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fg"><label>ภาคเรียน</label><input id="pm-term" placeholder="เช่น 2/2568" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>ส่วนที่ 1 (บาท)</label><input id="pm-p1" type="number" value="0" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>ส่วนที่ 2 (บาท)</label><input id="pm-p2" type="number" value="10000" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>รายการที่ 1</label><input id="pm-item1" value="ค่าเงินบำรุงการศึกษา" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>รายการที่ 2</label><input id="pm-item2" value="ค่าใช้จ่ายในการเรียน" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-    </div>`;
-  document.getElementById('pay-modal').classList.add('open');
-}
-
-function openEditPaymentModal(idx,pi){
-  const s=DB.students[idx];
-  const p=(s.semPayments||[])[pi];
-  if(!p){alert('ไม่พบข้อมูล');return;}
-  _payEditCtx={idx,pi};
-  document.getElementById('pay-modal-title').textContent=`แก้ไขการจ่ายเงิน — ${s.name}`;
-  document.getElementById('pay-modal-body').innerHTML=`
-    <div style="margin-bottom:12px;padding:10px 12px;background:var(--blue-lt);border-radius:var(--rad);font-size:13px">
-      <strong>${s.name}</strong> (${s.nickname}) • ${s.school_m1}
-    </div>
-    <div class="form-grid" style="gap:12px">
-      <div class="fg"><label>ภาคเรียน</label><input id="pm-term" value="${p.term||''}" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>ส่วนที่ 1 (บาท)</label><input id="pm-p1" type="number" value="${p.p1||0}" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>ส่วนที่ 2 (บาท)</label><input id="pm-p2" type="number" value="${p.p2||0}" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>รายการที่ 1</label><input id="pm-item1" value="${p.item1||''}" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-      <div class="fg"><label>รายการที่ 2</label><input id="pm-item2" value="${p.item2||''}" style="padding:8px 10px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg)"></div>
-    </div>`;
-  document.getElementById('pay-modal').classList.add('open');
-}
-
-function savePaymentModal(){
-  const term=(document.getElementById('pm-term').value||'').trim();
-  const p1=parseFloat(document.getElementById('pm-p1').value)||0;
-  const p2=parseFloat(document.getElementById('pm-p2').value)||0;
-  const item1=document.getElementById('pm-item1').value||'';
-  const item2=document.getElementById('pm-item2').value||'';
-  if(!term){alert('กรุณากรอกภาคเรียน');return;}
-  if(_payEditCtx){
-    // Edit existing
-    const{idx,pi}=_payEditCtx;
-    DB.students[idx].semPayments[pi]={term,p1,p2,item1,item2};
-    // sync back to payment legacy field
-    DB.students[idx].payment={term,p1,p2,item1,item2};
-  } else {
-    // Add new
-    const idx=parseInt(document.getElementById('pm-student').value);
-    if(!DB.students[idx].semPayments) DB.students[idx].semPayments=[];
-    // check dup term
-    const dup=DB.students[idx].semPayments.findIndex(x=>x.term===term);
-    if(dup>=0){
-      if(!confirm(`ภาคเรียน ${term} ของนักเรียนคนนี้มีอยู่แล้ว ต้องการแทนที่ข้อมูล?`)) return;
-      DB.students[idx].semPayments[dup]={term,p1,p2,item1,item2};
-    } else {
-      DB.students[idx].semPayments.push({term,p1,p2,item1,item2});
-    }
-  }
-  closeModal('pay-modal');
-  saveToStorage();
-  renderPayment();
-  renderDashboard();
-  showStatus('💰 บันทึกข้อมูลการจ่ายเงินเรียบร้อย','ok');
-  if(SCRIPT_URL && _payEditCtx) upsertStudent(DB.students[_payEditCtx.idx]);
-}
-
-function deletePaymentRow(idx,pi){
-  const s=DB.students[idx];
-  const p=(s.semPayments||[])[pi];
-  if(!p) return;
-  if(!confirm(`ลบข้อมูลการจ่ายเงิน ภาคเรียน ${p.term} ของ ${s.name}?`)) return;
-  s.semPayments.splice(pi,1);
-  saveToStorage();
-  renderPayment();
-  renderDashboard();
-  showStatus('🗑 ลบข้อมูลเรียบร้อย','ok');
 }
 
 // ============ ACADEMIC ============
@@ -1564,7 +1421,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfae5QW85WIn6Uhk_lrQAB6cNLWhOr9Cb5CwXAHJYfbWGJvD8jCpxHWpSZsUP889FNcw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT_R-aBRR_nsh718z4o7qXnenzxL4kgUK4vO1TGFq90ktMw4XueFWjBMifShaAJ5I8XA/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
