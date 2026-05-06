@@ -1408,11 +1408,11 @@ function loadFromStorage() {
 }
 
 // Google Sheet connector functions
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzccrR3AAhwe7sWZxyhynvL7sG8JuguCs4OsoXcjHC8IZOu6XBDgNxgx3xj2qOJoWVbwA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrc-zddZh8rqo6S7yvPe5ArR0oLP1f6qvxs64HgNPuL475lzVR2_hJfgtIsWFojTY1xQ/exec';
 let isConnected = false;
 
 async function loadFromSheet() {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzccrR3AAhwe7sWZxyhynvL7sG8JuguCs4OsoXcjHC8IZOu6XBDgNxgx3xj2qOJoWVbwA/exec') {
+  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxrc-zddZh8rqo6S7yvPe5ArR0oLP1f6qvxs64HgNPuL475lzVR2_hJfgtIsWFojTY1xQ/exec') {
     showStatus('⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error');
     return;
   }
