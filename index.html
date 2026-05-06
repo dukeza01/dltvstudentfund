@@ -1421,7 +1421,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT_R-aBRR_nsh718z4o7qXnenzxL4kgUK4vO1TGFq90ktMw4XueFWjBMifShaAJ5I8XA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDqgai5n-lc7t7o7fuNa1FYTkawfI3x45tS--kLwkh2WY2jc8YjDryKvyWeCK01TJeiQ/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -1433,13 +1433,54 @@ let _retryCount     = 0;
 let _isSaving       = false;      // lock ป้องกัน race condition
 
 // ─── helpers ──────────────────────────────────────────────
+function parseJsonField(val) {
+  if (!val) return null;
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    const t = val.trim();
+    if (t.startsWith('[') || t.startsWith('{')) {
+      try { return JSON.parse(t); } catch(e) { return null; }
+    }
+  }
+  return null;
+}
+
 function normalizeStudent(s) {
-  if (!s.semPayments || s.semPayments.length === 0) {
-    s.semPayments = [{ term: s.payment?.term||'1/2568', p1: s.payment?.p1||0, p2: s.payment?.p2||0, item1: s.payment?.item1||'', item2: s.payment?.item2||'' }];
+  // parse semPayments — อาจเป็น JSON string จาก Sheet
+  const pp = parseJsonField(s.semPayments);
+  if (pp && pp.length > 0) {
+    s.semPayments = pp.map(p => ({
+      term: p.term || '', p1: Number(p.p1)||0, p2: Number(p.p2)||0,
+      item1: p.item1||'', item2: p.item2||''
+    }));
+  } else if (!Array.isArray(s.semPayments) || s.semPayments.length === 0) {
+    // fallback: ลองอ่าน column ใหม่จาก GAS (Academic_yearM.1_1_68, M_1_P_1-68, M_1_P_2-68)
+    const term1 = s['Academic_yearM.1_1_68'] || s.payment?.term || '1/2568';
+    const p1v   = Number(s['M_1_P_1-68']) || Number(s['M_1_P1-68']) || Number(s.payment?.p1) || 0;
+    const p2v   = Number(s['M_1_P_2-68']) || Number(s['M_1_P2-68']) || Number(s.payment?.p2) || 0;
+    // term 2 (ถ้ามี)
+    const term2 = s['Academic_yearM.1_2_68'] || '';
+    const p3v   = Number(s['M_1_P_2-68_2']) || 0;
+    const p4v   = Number(s['M_1_P2-68_2']) || 0;
+    s.semPayments = [{ term: term1, p1: p1v, p2: p2v, item1: s.payment?.item1||'ค่าเงินบำรุงการศึกษา', item2: s.payment?.item2||'ค่าใช้จ่ายในการเรียน' }];
+    if (term2) s.semPayments.push({ term: term2, p1: p3v, p2: p4v, item1: '', item2: '' });
   }
-  if (!s.semGpa || s.semGpa.length === 0) {
-    s.semGpa = [{ term:'1/2568', gpa: s.gpa?.gpa||0, riskLevel: s.gpa?.riskLevel||'ปานกลาง', hasObstacle: s.gpa?.hasObstacle||false, obstacleType: s.gpa?.obstacleType||'', weakSubjects: s.gpa?.weakSubjects||'', schoolSupport: s.gpa?.schoolSupport||'' }];
+
+  // parse semGpa — อาจเป็น JSON string จาก Sheet
+  const pg = parseJsonField(s.semGpa);
+  if (pg && pg.length > 0) {
+    s.semGpa = pg.map(g => ({
+      term: g.term||'', gpa: Number(g.gpa)||0,
+      riskLevel: g.riskLevel||'ปานกลาง',
+      hasObstacle: g.hasObstacle===true||g.hasObstacle==='true'||g.hasObstacle==='TRUE',
+      obstacleType: g.obstacleType||'', weakSubjects: g.weakSubjects||'', schoolSupport: g.schoolSupport||''
+    }));
+  } else if (!Array.isArray(s.semGpa) || s.semGpa.length === 0) {
+    s.semGpa = [{ term:'1/2568', gpa: Number(s.gpa?.gpa)||0, riskLevel: s.gpa?.riskLevel||'ปานกลาง',
+      hasObstacle: s.gpa?.hasObstacle||false, obstacleType: s.gpa?.obstacleType||'',
+      weakSubjects: s.gpa?.weakSubjects||'', schoolSupport: s.gpa?.schoolSupport||'' }];
   }
+
   if (!s.mentor) s.mentor = { firstName:'', lastName:'', phone:'', position:'' };
   if (!s.hasOwnProperty('behavior')) s.behavior = '';
   return s;
