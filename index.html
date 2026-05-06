@@ -872,10 +872,10 @@ function openStudentDetail(idx){
     <div class="form-section">
       <div class="form-section-title">ข้อมูลพี่เลี้ยง</div>
       <div class="form-grid">
-        <div class="fg"><label>ชื่อ</label><input value="${s.mentor?.firstName||''}" placeholder="ชื่อ" onchange="DB.students[${idx}].mentor.firstName=this.value"
-        <div class="fg"><label>สกุล</label><input value="${s.mentor?.lastName||''}" placeholder="นามสกุล" onchange="DB.students[${idx}].mentor.lastName=this.value"
-        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentor?.phone||''}" placeholder="08x-xxx-xxxx" onchange="DB.students[${idx}].mentor.phone=this.value"
-        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentor?.position||''}" placeholder="เช่น ระบุตำแหน่ง" onchange="DB.students[${idx}].mentor.position=this.value"
+        <div class="fg"><label>ชื่อ</label><input value="${s.mentor?.firstName||''}" placeholder="ชื่อ" onchange="DB.students[${idx}].mentor.firstName=this.value"></div>
+        <div class="fg"><label>สกุล</label><input value="${s.mentor?.lastName||''}" placeholder="นามสกุล" onchange="DB.students[${idx}].mentor.lastName=this.value"></div>
+        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentor?.phone||''}" placeholder="08x-xxx-xxxx" onchange="DB.students[${idx}].mentor.phone=this.value"></div>
+        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentor?.position||''}" placeholder="เช่น ระบุตำแหน่ง" onchange="DB.students[${idx}].mentor.position=this.value"></div>
       </div>
     </div>
     <div class="form-section">
@@ -1377,11 +1377,9 @@ function loadFromStorage() {
             p1: s.payment?.p1 || 0, p2: s.payment?.p2 || 0,
             item1: s.payment?.item1 || '', item2: s.payment?.item2 || ''
           }];
-          // หลัง DB.students = ...
-DB.students.forEach(s => {
-  if (!s.mentor) s.mentor = { firstName: '', lastName: '', phone: '', position: '' };
-  if (!s.hasOwnProperty('behavior')) s.behavior = '';
-});
+          // migrate mentor & behavior fields
+          if (!s.mentor) s.mentor = { firstName: '', lastName: '', phone: '', position: '' };
+          if (!s.hasOwnProperty('behavior')) s.behavior = '';
           // ถ้า semGpa ว่างหรือ gpa=0 ทั้งหมด ให้ rebuild จาก gpa field
           if (!s.semGpa || s.semGpa.length === 0 || s.semGpa.every(g => !g.gpa || g.gpa === 0)) {
             s.semGpa = [{
@@ -1413,19 +1411,19 @@ DB.students.forEach(s => {
 }
 
 // Google Sheet connector functions
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEHG0weYeuQFCHefHCoI0MoCkV6VlYvV6u10bTCfFERI4g3gvSCekR3k2P7KyN6n26qA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzXgsIBbs-sp2Xds1YJSoGMVZ9Zz9oEsCvuG2d2V4apSuDAjETcYEV6hN876UleaMKzxQ/exec';
 let isConnected = false;
 
 async function loadFromSheet() {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzEHG0weYeuQFCHefHCoI0MoCkV6VlYvV6u10bTCfFERI4g3gvSCekR3k2P7KyN6n26qA/exec') {
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
     showStatus('⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error');
     return;
   }
   showLoading(true, 'กำลังโหลดข้อมูลจาก Google Sheet...');
   try {
-    const res = await fetch(`${SCRIPT_URL}?action=getData`);
+    const res = await fetch(SCRIPT_URL);
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error);
+    if (json.status !== 'ok') throw new Error(json.message || 'โหลดข้อมูลไม่สำเร็จ');
     DB.students = json.data.map(s => {
       if (!s.semPayments || s.semPayments.length === 0) {
         s.semPayments = [{
@@ -1460,18 +1458,31 @@ async function loadFromSheet() {
 }
 
 async function saveStudentToSheet(idx) {
-  if (!isConnected || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   const s = DB.students[idx];
   try {
+    const cleanStudents = DB.students.map(st => ({
+      ...st,
+      photoUrl: (st.photoUrl && st.photoUrl.startsWith('data:')) ? '' : (st.photoUrl || ''),
+      mentor: {
+        firstName: st.mentor?.firstName || '',
+        lastName: st.mentor?.lastName || '',
+        phone: st.mentor?.phone || '',
+        position: st.mentor?.position || ''
+      },
+      behavior: st.behavior || ''
+    }));
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'saveStudent', student: s })
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'saveAll', students: cleanStudents })
     });
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error);
+    if (json.status !== 'ok') throw new Error(json.message || 'บันทึกไม่สำเร็จ');
+    isConnected = true; updateSyncStatus(true);
     showStatus('✅ บันทึก ' + s.name + ' ไปยัง Sheet สำเร็จ', 'success');
   } catch (err) {
-    showStatus('❌ Sheet Error: ' + err.message, 'error');
+    showStatus('⚠️ บันทึก Sheet ไม่สำเร็จ: ' + err.message, 'error');
   }
 }
 
@@ -1483,14 +1494,23 @@ async function saveAllToSheet() {
   showLoading(true, 'กำลังบันทึก ' + DB.students.length + ' คน...');
   try {
     const cleanStudents = DB.students.map(s => ({
-      ...s, photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : s.photoUrl
+      ...s,
+      photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl || ''),
+      mentor: {
+        firstName: s.mentor?.firstName || '',
+        lastName: s.mentor?.lastName || '',
+        phone: s.mentor?.phone || '',
+        position: s.mentor?.position || ''
+      },
+      behavior: s.behavior || ''
     }));
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'saveAll', students: cleanStudents })
     });
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error);
+    if (json.status !== 'ok') throw new Error(json.message || 'บันทึกไม่สำเร็จ');
     isConnected = true; updateSyncStatus(true);
     showStatus('✅ บันทึกทั้งหมดสำเร็จ', 'success');
   } catch (err) {
@@ -1561,9 +1581,10 @@ function saveAndRefresh() {
   // Re-number all students to keep no consistent
   DB.students.forEach((s, i) => { s.no = i + 1; });
   saveToStorage();
+  const savedIdx = editingIndex;
   closeModal('student-modal');
   renderStudents(); renderDashboard(); populateFilters();
-  if (editingIndex !== null) saveStudentToSheet(editingIndex);
+  if (savedIdx !== null) saveStudentToSheet(savedIdx);
   showStatus('✅ บันทึกข้อมูลสำเร็จ', 'success');
 }
 
