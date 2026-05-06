@@ -278,6 +278,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
   <div class="header-spacer"></div>
   <div class="header-year">📚 ปีการศึกษา 2568</div>
   <div id="sync-status" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:6px;font-size:12px;color:#fff;cursor:default" title="สถานะการเชื่อมต่อ">⚫ Local</div>
+  <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:4px 8px;border-radius:6px;font-size:11px;color:rgba(255,255,255,0.7)" title="นับถอยหลัง Auto-sync">🔁 <span id="sync-countdown">—</span></div>
   <button onclick="loadFromSheet()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);padding:5px 12px;border-radius:6px;font-size:12px;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif" title="โหลดข้อมูลจาก Google Sheet">🔄 Sync</button>
   <button onclick="saveAllToSheet()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);padding:5px 12px;border-radius:6px;font-size:12px;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif" title="บันทึกทั้งหมดไปยัง Sheet">💾 Save All</button>
   <button onclick="exportJSON()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);padding:5px 12px;border-radius:6px;font-size:12px;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif" title="Export JSON สำหรับนำเข้า Sheet ครั้งแรก">📤 Export</button>
@@ -1410,157 +1411,266 @@ function loadFromStorage() {
   }
 }
 
-// Google Sheet connector functions
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzXgsIBbs-sp2Xds1YJSoGMVZ9Zz9oEsCvuG2d2V4apSuDAjETcYEV6hN876UleaMKzxQ/exec';
-let isConnected = false;
+// ╔══════════════════════════════════════════════════════════╗
+//  REAL-TIME SYNC ENGINE — GitHub Pages + Google Apps Script
+//  Strategy: 5-second smart polling + optimistic UI
+//  - กด "บันทึก" → อัปเดตหน้าจอทันที (optimistic) + upsert ไป Sheet
+//  - ทุก 5 วินาที → check lastUpdated ใน Sheet (1 request เบามาก)
+//  - ถ้า lastUpdated เปลี่ยน → ดึงเฉพาะ record ที่ต่างกัน (diff)
+//  - ไม่มี full reload → UI ไม่กระตุก
+// ╚══════════════════════════════════════════════════════════╝
 
-async function loadFromSheet() {
-  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
-    showStatus('⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error');
-    return;
+// ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUVVKyOSA8XHY_lOYVCxi47Gw8sLtW-JBGvqXxB8CuMSqqAeqHGupzZ3giJBV2DS0H5w/exec';
+
+const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
+const RETRY_MAX         = 3;      // retry ก่อน offline
+
+let isConnected     = false;
+let lastKnownUpdate = null;       // lastUpdated timestamp จาก meta sheet
+let _pollTimer      = null;
+let _retryCount     = 0;
+let _isSaving       = false;      // lock ป้องกัน race condition
+
+// ─── helpers ──────────────────────────────────────────────
+function normalizeStudent(s) {
+  if (!s.semPayments || s.semPayments.length === 0) {
+    s.semPayments = [{ term: s.payment?.term||'1/2568', p1: s.payment?.p1||0, p2: s.payment?.p2||0, item1: s.payment?.item1||'', item2: s.payment?.item2||'' }];
   }
-  showLoading(true, 'กำลังโหลดข้อมูลจาก Google Sheet...');
+  if (!s.semGpa || s.semGpa.length === 0) {
+    s.semGpa = [{ term:'1/2568', gpa: s.gpa?.gpa||0, riskLevel: s.gpa?.riskLevel||'ปานกลาง', hasObstacle: s.gpa?.hasObstacle||false, obstacleType: s.gpa?.obstacleType||'', weakSubjects: s.gpa?.weakSubjects||'', schoolSupport: s.gpa?.schoolSupport||'' }];
+  }
+  if (!s.mentor) s.mentor = { firstName:'', lastName:'', phone:'', position:'' };
+  if (!s.hasOwnProperty('behavior')) s.behavior = '';
+  return s;
+}
+
+function cleanForSheet(s) {
+  return { ...s,
+    photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl||''),
+    mentor: { firstName: s.mentor?.firstName||'', lastName: s.mentor?.lastName||'', phone: s.mentor?.phone||'', position: s.mentor?.position||'' },
+    behavior: s.behavior || ''
+  };
+}
+
+async function gasPost(body) {
+  const res = await fetch(SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(json.message || 'GAS error');
+  return json;
+}
+
+// ─── โหลดครั้งแรก ─────────────────────────────────────────
+async function loadFromSheet(silent = false) {
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+    if (!silent) showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ใน index.html', 'error');
+    return false;
+  }
+  if (!silent) showLoading(true, 'กำลังโหลดข้อมูลจาก Google Sheet...');
+  setSyncDot('syncing');
   try {
-    const res = await fetch(SCRIPT_URL);
+    const res  = await fetch(SCRIPT_URL + '?t=' + Date.now()); // cache-bust
     const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message || 'โหลดข้อมูลไม่สำเร็จ');
-    DB.students = json.data.map(s => {
-      if (!s.semPayments || s.semPayments.length === 0) {
-        s.semPayments = [{
-          term: s.payment?.term || '1/2568',
-          p1: s.payment?.p1 || 0, p2: s.payment?.p2 || 0,
-          item1: s.payment?.item1 || '', item2: s.payment?.item2 || ''
-        }];
-      }
-      if (!s.semGpa || s.semGpa.length === 0) {
-        s.semGpa = [{
-          term: '1/2568', gpa: s.gpa?.gpa || 0,
-          riskLevel: s.gpa?.riskLevel || 'ปานกลาง',
-          hasObstacle: s.gpa?.hasObstacle || false,
-          obstacleType: s.gpa?.obstacleType || '',
-          weakSubjects: s.gpa?.weakSubjects || '',
-          schoolSupport: s.gpa?.schoolSupport || ''
-        }];
-      }
-      return s;
-    });
-    isConnected = true;
-    updateSyncStatus(true);
-    loadFromStorage(); // โหลดรูปภาพที่เคย save ไว้ทับ
-    saveToStorage();   // บันทึกข้อมูลจาก Sheet ลง localStorage
+    if (json.status !== 'ok') throw new Error(json.message || 'โหลดไม่สำเร็จ');
+    DB.students = json.data.map(s => normalizeStudent(s));
+    lastKnownUpdate = json.lastUpdated || null;
+    isConnected = true; _retryCount = 0;
+    loadFromStorage();  // โหลดรูป base64 จาก localStorage ทับ
+    saveToStorage();
     renderDashboard(); renderStudents(); populateFilters();
-    showStatus('✅ โหลดข้อมูลสำเร็จ — ' + DB.students.length + ' คน', 'success');
+    if (!silent) showStatus('✅ โหลดสำเร็จ — ' + DB.students.length + ' คน', 'success');
+    setSyncDot('online');
+    startPolling();
+    return true;
   } catch (err) {
-    showStatus('❌ โหลดไม่สำเร็จ: ' + err.message, 'error');
+    setSyncDot('offline');
+    if (!silent) showStatus('❌ โหลดไม่สำเร็จ: ' + err.message, 'error');
+    return false;
   } finally {
-    showLoading(false);
+    if (!silent) showLoading(false);
   }
 }
 
+// ─── POLLING CORE ──────────────────────────────────────────
+function startPolling() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(pollTick, POLL_INTERVAL_MS);
+}
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+async function pollTick() {
+  if (!isConnected || _isSaving) return; // ข้ามถ้ากำลังบันทึกอยู่
+  try {
+    // Step 1: check lastUpdated เท่านั้น (super lightweight)
+    const res  = await fetch(SCRIPT_URL + '?check=1&t=' + Date.now());
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error('poll error');
+
+    _retryCount = 0;
+    const serverUpdate = json.lastUpdated;
+
+    // ถ้า timestamp ไม่เปลี่ยน → ไม่ต้องทำอะไร
+    if (serverUpdate && serverUpdate === lastKnownUpdate) {
+      setSyncDot('online');
+      return;
+    }
+
+    // Step 2: มีการเปลี่ยนแปลง → ดึงเฉพาะที่เปลี่ยนหลัง lastKnownUpdate
+    const since = lastKnownUpdate || '';
+    const res2  = await fetch(`${SCRIPT_URL}?since=${encodeURIComponent(since)}&t=${Date.now()}`);
+    const json2 = await res2.json();
+    if (json2.status !== 'ok') throw new Error('fetch diff error');
+
+    const changed = json2.data || [];
+    if (changed.length > 0) {
+      // Merge diff เข้า DB (ไม่ reload ทั้งหมด)
+      let addCount = 0, updateCount = 0;
+      changed.forEach(incoming => {
+        const norm = normalizeStudent(incoming);
+        const idx  = DB.students.findIndex(s => String(s.id) === String(norm.id));
+        if (idx >= 0) { DB.students[idx] = { ...DB.students[idx], ...norm }; updateCount++; }
+        else          { DB.students.push(norm); addCount++; }
+      });
+      DB.students.forEach((s, i) => { s.no = i + 1; });
+      lastKnownUpdate = json2.lastUpdated || serverUpdate;
+      saveToStorage();
+      renderDashboard(); renderStudents(); populateFilters();
+      // แจ้งเตือนแบบ toast เบาๆ
+      const msg = [];
+      if (updateCount) msg.push(`อัปเดต ${updateCount} คน`);
+      if (addCount)    msg.push(`เพิ่มใหม่ ${addCount} คน`);
+      showStatus('🔄 ' + msg.join(' • ') + ' (จากผู้ใช้อื่น)', 'info');
+      flashSyncDot();
+    } else {
+      lastKnownUpdate = serverUpdate;
+    }
+    setSyncDot('online');
+  } catch(e) {
+    _retryCount++;
+    if (_retryCount >= RETRY_MAX) {
+      setSyncDot('offline');
+      isConnected = false;
+      showStatus('📡 ขาดการเชื่อมต่อ — กด 🔄 Sync เพื่อลองใหม่', 'error');
+      stopPolling();
+    }
+  }
+}
+
+// ─── Sync dot visual ──────────────────────────────────────
+function setSyncDot(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    online:  { text:'🟢 Live', title:'Real-time sync ทุก 5 วินาที', bg:'rgba(58,106,16,0.25)' },
+    syncing: { text:'🔵 กำลัง sync...', title:'กำลังโหลด...', bg:'rgba(26,95,168,0.25)' },
+    offline: { text:'🔴 ออฟไลน์', title:'กด 🔄 Sync เพื่อเชื่อมต่อใหม่', bg:'rgba(158,43,43,0.25)' }
+  };
+  const s = map[state] || map.offline;
+  el.textContent = s.text;
+  el.title = s.title;
+  el.style.background = s.bg;
+}
+function flashSyncDot() {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.style.transition = 'opacity 0.1s';
+  el.style.opacity = '0.3';
+  setTimeout(() => { el.style.opacity = '1'; }, 200);
+}
+
+// ─── บันทึก 1 คน (optimistic + upsert) ───────────────────
 async function saveStudentToSheet(idx) {
   if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   const s = DB.students[idx];
+  if (!s) return;
+  _isSaving = true;
+  setSyncDot('syncing');
   try {
-    const cleanStudents = DB.students.map(st => ({
-      ...st,
-      photoUrl: (st.photoUrl && st.photoUrl.startsWith('data:')) ? '' : (st.photoUrl || ''),
-      mentor: {
-        firstName: st.mentor?.firstName || '',
-        lastName: st.mentor?.lastName || '',
-        phone: st.mentor?.phone || '',
-        position: st.mentor?.position || ''
-      },
-      behavior: st.behavior || ''
-    }));
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'saveAll', students: cleanStudents })
-    });
-    const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message || 'บันทึกไม่สำเร็จ');
-    isConnected = true; updateSyncStatus(true);
-    showStatus('✅ บันทึก ' + s.name + ' ไปยัง Sheet สำเร็จ', 'success');
+    const result = await gasPost({ action: 'upsert', student: cleanForSheet(s) });
+    if (result.lastUpdated) lastKnownUpdate = result.lastUpdated; // อัปเดต timestamp ทันที
+    isConnected = true; _retryCount = 0;
+    setSyncDot('online');
+    showStatus('☁️ บันทึก ' + (s.name||'นักเรียนใหม่') + ' ไปยัง Sheet แล้ว', 'success');
+    if (!_pollTimer) startPolling(); // restart polling ถ้าหยุดไป
   } catch (err) {
-    showStatus('⚠️ บันทึก Sheet ไม่สำเร็จ: ' + err.message, 'error');
+    setSyncDot('offline');
+    showStatus('⚠️ Sheet ไม่ตอบสนอง (บันทึก local ไว้แล้ว) — จะ retry อัตโนมัติ', 'error');
+    // queue retry
+    setTimeout(() => saveStudentToSheet(idx), 10000);
+  } finally {
+    _isSaving = false;
   }
 }
 
+// ─── บันทึกทุกคน (import / reset) ────────────────────────
 async function saveAllToSheet() {
   if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
-    showStatus('⚠️ ยังไม่ได้ตั้งค่า Google Sheet URL', 'error'); return;
+    showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL', 'error'); return;
   }
-  if (!confirm('บันทึกข้อมูลนักเรียนทั้งหมด (' + DB.students.length + ' คน) ไปยัง Google Sheet?')) return;
+  if (!confirm('บันทึกข้อมูลทั้งหมด (' + DB.students.length + ' คน) ไปยัง Google Sheet?\n⚠️ จะเขียนทับข้อมูลทั้งหมดใน Sheet')) return;
+  stopPolling(); _isSaving = true;
   showLoading(true, 'กำลังบันทึก ' + DB.students.length + ' คน...');
+  setSyncDot('syncing');
   try {
-    const cleanStudents = DB.students.map(s => ({
-      ...s,
-      photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl || ''),
-      mentor: {
-        firstName: s.mentor?.firstName || '',
-        lastName: s.mentor?.lastName || '',
-        phone: s.mentor?.phone || '',
-        position: s.mentor?.position || ''
-      },
-      behavior: s.behavior || ''
-    }));
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'saveAll', students: cleanStudents })
-    });
-    const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message || 'บันทึกไม่สำเร็จ');
-    isConnected = true; updateSyncStatus(true);
-    showStatus('✅ บันทึกทั้งหมดสำเร็จ', 'success');
+    const result = await gasPost({ action: 'saveAll', students: DB.students.map(s => cleanForSheet(s)) });
+    if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
+    isConnected = true; setSyncDot('online');
+    showStatus('✅ บันทึกทั้งหมด ' + DB.students.length + ' คนสำเร็จ', 'success');
   } catch (err) {
+    setSyncDot('offline');
     showStatus('❌ บันทึกไม่สำเร็จ: ' + err.message, 'error');
   } finally {
+    _isSaving = false;
     showLoading(false);
+    startPolling();
   }
 }
 
+// ─── ลบออกจาก Sheet ───────────────────────────────────────
 async function deleteStudentFromSheet(studentId) {
-  if (!isConnected || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'deleteStudent', id: studentId })
-    });
-  } catch(e) {}
+    const result = await gasPost({ action: 'delete', id: studentId });
+    if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
+  } catch(e) { console.warn('deleteStudentFromSheet:', e.message); }
 }
 
+// ─── Export JSON ───────────────────────────────────────────
 function exportJSON() {
   const json = JSON.stringify(DB.students, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const blob = new Blob([json], { type:'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
   a.href = url; a.download = 'dltv_students.json'; a.click();
   URL.revokeObjectURL(url);
   showStatus('✅ Export JSON สำเร็จ', 'success');
 }
 
-function updateSyncStatus(connected) {
-  const el = document.getElementById('sync-status');
-  if (el) el.textContent = connected ? '🟢 Sheet' : '⚫ Local';
-}
+// ─── UI helpers ───────────────────────────────────────────
+function updateSyncStatus(connected, label) { setSyncDot(connected ? 'online' : 'offline'); }
 
 function showStatus(msg, type = 'success') {
   let bar = document.getElementById('status-bar');
   if (!bar) {
     bar = document.createElement('div');
     bar.id = 'status-bar';
-    bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Sarabun,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:opacity 0.4s;max-width:320px;line-height:1.4';
+    bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Sarabun,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:opacity 0.4s;max-width:360px;line-height:1.4;border:1px solid transparent';
     document.body.appendChild(bar);
   }
   const colors = {
-    success: 'background:#E0F3EE;color:#0D6B52;border:1px solid #9FE1CB',
-    error:   'background:#FBECEC;color:#9E2B2B;border:1px solid #F7C1C1',
-    info:    'background:#E8F0FB;color:#1A5FA8;border:1px solid #B5D4F4'
+    success: 'background:#E0F3EE;color:#0D6B52;border-color:#9FE1CB',
+    error:   'background:#FBECEC;color:#9E2B2B;border-color:#F7C1C1',
+    info:    'background:#E8F0FB;color:#1A5FA8;border-color:#B5D4F4'
   };
-  bar.setAttribute('style', bar.style.cssText + ';' + (colors[type] || colors.success));
-  bar.textContent = msg; bar.style.opacity = '1';
-  if (type !== 'info') setTimeout(() => { bar.style.opacity = '0'; }, 4000);
+  bar.style.cssText = bar.style.cssText.split(';').filter(x => !x.startsWith('background') && !x.startsWith('color') && !x.startsWith('border-color')).join(';') + ';' + (colors[type] || colors.success).split(';').join(';');
+  bar.style.opacity = '1';
+  bar.textContent = msg;
+  clearTimeout(bar._t);
+  if (type !== 'info') bar._t = setTimeout(() => { bar.style.opacity = '0'; }, 5000);
+  else bar._t = setTimeout(() => { bar.style.opacity = '0'; }, 8000);
 }
 
 function showLoading(show, msg = '') {
@@ -1576,16 +1686,14 @@ function showLoading(show, msg = '') {
   if (msg) document.getElementById('loading-msg').textContent = msg;
 }
 
-// Override saveAndRefresh to also save to Sheet
+// ─── บันทึก + ปิด modal (optimistic UI) ──────────────────
 function saveAndRefresh() {
-  // Re-number all students to keep no consistent
   DB.students.forEach((s, i) => { s.no = i + 1; });
   saveToStorage();
   const savedIdx = editingIndex;
   closeModal('student-modal');
-  renderStudents(); renderDashboard(); populateFilters();
-  if (savedIdx !== null) saveStudentToSheet(savedIdx);
-  showStatus('✅ บันทึกข้อมูลสำเร็จ', 'success');
+  renderStudents(); renderDashboard(); populateFilters(); // แสดงทันที (optimistic)
+  if (savedIdx !== null) saveStudentToSheet(savedIdx);   // sync ใน background
 }
 
 // Override deleteStudent to also delete from Sheet
@@ -1609,6 +1717,12 @@ function deleteStudent(idx) {
   renderDashboard();
   renderStudents();
   populateFilters();
+  // โหลดข้อมูลจาก Sheet อัตโนมัติเมื่อเปิดหน้า (silent ถ้ายังไม่ตั้ง URL)
+  if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_WEB_APP_URL_HERE') {
+    loadFromSheet(false);
+  } else {
+    showStatus('💡 ตั้งค่า SCRIPT_URL ใน index.html เพื่อเชื่อมต่อ Google Sheet', 'info');
+  }
 })();
 
 // ============ LIGHTBOX ============
