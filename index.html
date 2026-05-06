@@ -1377,6 +1377,11 @@ function loadFromStorage() {
             p1: s.payment?.p1 || 0, p2: s.payment?.p2 || 0,
             item1: s.payment?.item1 || '', item2: s.payment?.item2 || ''
           }];
+          // หลัง DB.students = ...
+DB.students.forEach(s => {
+  if (!s.mentor) s.mentor = { firstName: '', lastName: '', phone: '', position: '' };
+  if (!s.hasOwnProperty('behavior')) s.behavior = '';
+});
           // ถ้า semGpa ว่างหรือ gpa=0 ทั้งหมด ให้ rebuild จาก gpa field
           if (!s.semGpa || s.semGpa.length === 0 || s.semGpa.every(g => !g.gpa || g.gpa === 0)) {
             s.semGpa = [{
