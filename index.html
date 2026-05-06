@@ -872,10 +872,10 @@ function openStudentDetail(idx){
     <div class="form-section">
       <div class="form-section-title">ข้อมูลพี่เลี้ยง</div>
       <div class="form-grid">
-        <div class="fg"><label>ชื่อ</label><input value="${s.mentorFirstName||''}" placeholder="ชื่อ" onchange="DB.students[${idx}].mentorFirstName=this.value"></div>
-        <div class="fg"><label>สกุล</label><input value="${s.mentorLastName||''}" placeholder="นามสกุล" onchange="DB.students[${idx}].mentorLastName=this.value"></div>
-        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentorPhone||''}" placeholder="08x-xxx-xxxx" onchange="DB.students[${idx}].mentorPhone=this.value"></div>
-        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentorPosition||''}" placeholder="เช่น ระบุตำแหน่ง" onchange="DB.students[${idx}].mentorPosition=this.value"></div>
+        <div class="fg"><label>ชื่อ</label><input value="${s.mentor?.firstName||''}" placeholder="ชื่อ" onchange="DB.students[${idx}].mentor.firstName=this.value"
+        <div class="fg"><label>สกุล</label><input value="${s.mentor?.lastName||''}" placeholder="นามสกุล" onchange="DB.students[${idx}].mentor.lastName=this.value"
+        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentor?.phone||''}" placeholder="08x-xxx-xxxx" onchange="DB.students[${idx}].mentor.phone=this.value"
+        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentor?.position||''}" placeholder="เช่น ระบุตำแหน่ง" onchange="DB.students[${idx}].mentor.position=this.value"
       </div>
     </div>
     <div class="form-section">
