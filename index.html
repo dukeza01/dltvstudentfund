@@ -412,7 +412,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
   </div>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>ภาคเรียน</th><th>ส่วนที่ 1 (บาท)</th><th>ส่วนที่ 2 (บาท)</th><th>รวม (บาท)</th><th>รายการ 1</th><th>รายการ 2</th><th>จัดการ</th></tr></thead>
+      <thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>โรงเรียน ม.1</th><th>จังหวัด</th><th>ภาคเรียน</th><th>ส่วนที่ 1 — ค่าบำรุงฯ</th><th>ส่วนที่ 2 — ค่าใช้จ่าย</th><th>รวม (บาท)</th><th>จัดการ</th></tr></thead>
       <tbody id="payment-tbody"></tbody>
     </table>
     <div class="tbl-footer" id="payment-footer"></div>
@@ -460,12 +460,12 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
   <div class="modal-body">
     <div id="student-modal-header-info" class="modal-student-header"></div>
     <div class="detail-tabs" id="modal-tabs">
-      <button class="detail-tab active" onclick="switchTab('st',0,this)">ข้อมูลส่วนตัว</button>
-      <button class="detail-tab" onclick="switchTab('st',1,this)">ที่อยู่</button>
-      <button class="detail-tab" onclick="switchTab('st',2,this)">ผู้ปกครอง</button>
-      <button class="detail-tab" onclick="switchTab('st',3,this)">บัญชีธนาคาร</button>
-      <button class="detail-tab" onclick="switchTab('st',4,this)">ประวัติการเงิน</button>
-      <button class="detail-tab" onclick="switchTab('st',5,this)">ประวัติ GPA</button>
+      <button class="detail-tab active" onclick="switchTab('st',0,this)">👤 ข้อมูลส่วนตัว</button>
+      <button class="detail-tab" onclick="switchTab('st',1,this)">📍 ที่อยู่</button>
+      <button class="detail-tab" onclick="switchTab('st',2,this)">👨‍👩‍👧 ผู้ปกครอง</button>
+      <button class="detail-tab" onclick="switchTab('st',3,this)">🏦 บัญชีธนาคาร</button>
+      <button class="detail-tab" onclick="switchTab('st',4,this)">💰 ประวัติการเงิน</button>
+      <button class="detail-tab" onclick="switchTab('st',5,this)">📊 ประวัติ GPA</button>
     </div>
     <div id="st-panel-0" class="detail-panel active"></div>
     <div id="st-panel-1" class="detail-panel"></div>
@@ -855,36 +855,74 @@ function openStudentDetail(idx){
   // Panel 0: Personal
   const a=s.addr||{};
   document.getElementById('st-panel-0').innerHTML=`
+    <!-- ส่วนที่ 1: ประวัตินักเรียน -->
     <div class="form-section">
-      <div class="form-section-title">ข้อมูลส่วนตัว</div>
+      <div class="form-section-title" style="color:var(--blue);border-color:var(--blue)">👤 ประวัตินักเรียน</div>
       <div class="form-grid">
         <div class="fg"><label>ชื่อ-สกุล</label><input value="${s.name||''}" onchange="DB.students[${idx}].name=this.value;refreshModalHeader(${idx})"></div>
         <div class="fg"><label>ชื่อเล่น</label><input value="${s.nickname||''}" onchange="DB.students[${idx}].nickname=this.value;refreshModalHeader(${idx})"></div>
         <div class="fg"><label>เลขบัตรประชาชน</label><input value="${s.id||''}" onchange="DB.students[${idx}].id=this.value"></div>
         <div class="fg"><label>วันเดือนปีเกิด</label><input type="date" value="${s.dob||''}" onchange="DB.students[${idx}].dob=this.value"></div>
-        <div class="fg"><label>โทรศัพท์</label><input value="${s.phone||''}" onchange="DB.students[${idx}].phone=this.value"></div>
-        <div class="fg"><label>GPA ป.6</label><input type="number" step="0.01" value="${s.gpa_p6||''}" onchange="DB.students[${idx}].gpa_p6=parseFloat(this.value)||0"></div>
-        <div class="fg fg-full"><label>โรงเรียน ป.6</label><input value="${s.school_p6||''}" onchange="DB.students[${idx}].school_p6=this.value"></div>
-        <div class="fg fg-full"><label>โรงเรียน ม.1 (ปัจจุบัน)</label><input value="${s.school_m1||''}" onchange="DB.students[${idx}].school_m1=this.value"></div>
-        <div class="fg"><label>จังหวัด</label><input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
-        <div class="fg"><label>สังกัด</label><input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
+        <div class="fg"><label>โทรศัพท์นักเรียน</label><input value="${s.phone||''}" onchange="DB.students[${idx}].phone=this.value"></div>
+        <div class="fg"><label>ชื่อ-สกุล ผู้ปกครอง</label><input value="${s.parent||''}" onchange="DB.students[${idx}].parent=this.value"></div>
+        <div class="fg"><label>โทรศัพท์ผู้ปกครอง</label><input value="${s.parentPhone||''}" onchange="DB.students[${idx}].parentPhone=this.value"></div>
       </div>
     </div>
+    <!-- ส่วนที่ 2: ภูมิลำเนา -->
     <div class="form-section">
-      <div class="form-section-title">ข้อมูลพี่เลี้ยง</div>
+      <div class="form-section-title" style="color:var(--teal);border-color:var(--teal)">🏡 ภูมิลำเนา (บ้านเกิด)</div>
       <div class="form-grid">
-        <div class="fg"><label>ชื่อ</label><input value="${s.mentor?.firstName||''}" placeholder="ชื่อ" onchange="DB.students[${idx}].mentor.firstName=this.value"></div>
-        <div class="fg"><label>สกุล</label><input value="${s.mentor?.lastName||''}" placeholder="นามสกุล" onchange="DB.students[${idx}].mentor.lastName=this.value"></div>
-        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentor?.phone||''}" placeholder="08x-xxx-xxxx" onchange="DB.students[${idx}].mentor.phone=this.value"></div>
-        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentor?.position||''}" placeholder="เช่น ระบุตำแหน่ง" onchange="DB.students[${idx}].mentor.position=this.value"></div>
+        <div class="fg"><label>สัญชาติ</label><input value="${a.nat||''}" onchange="DB.students[${idx}].addr.nat=this.value"></div>
+        <div class="fg"><label>ศาสนา</label><input value="${a.rel||''}" onchange="DB.students[${idx}].addr.rel=this.value"></div>
+        <div class="fg"><label>หมู่ที่</label><input value="${a.moo||''}" onchange="DB.students[${idx}].addr.moo=this.value"></div>
+        <div class="fg"><label>ชื่อหมู่บ้าน</label><input value="${a.village||''}" onchange="DB.students[${idx}].addr.village=this.value"></div>
+        <div class="fg"><label>ตำบล</label><input value="${a.tambon||''}" onchange="DB.students[${idx}].addr.tambon=this.value"></div>
+        <div class="fg"><label>อำเภอ</label><input value="${a.amphoe||''}" onchange="DB.students[${idx}].addr.amphoe=this.value"></div>
+        <div class="fg"><label>จังหวัด</label><input value="${a.province||''}" onchange="DB.students[${idx}].addr.province=this.value"></div>
+        <div class="fg"><label>รหัสไปรษณีย์</label><input value="${a.zip||''}" onchange="DB.students[${idx}].addr.zip=this.value"></div>
       </div>
     </div>
+    <!-- ส่วนที่ 3: ข้อมูลโรงเรียน -->
     <div class="form-section">
-      <div class="form-section-title">พฤติกรรมนักเรียน</div>
+      <div class="form-section-title" style="color:var(--amber);border-color:var(--amber)">🏫 ข้อมูลโรงเรียน</div>
+      <div style="background:var(--blue-lt);border-radius:var(--rad);padding:12px 14px;margin-bottom:12px;border:1px solid rgba(26,95,168,0.12)">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">📚 โรงเรียนเดิม (ป.6)</div>
+        <div class="form-grid">
+          <div class="fg fg-full"><label>ชื่อโรงเรียน ป.6</label><input value="${s.school_p6||''}" onchange="DB.students[${idx}].school_p6=this.value"></div>
+          <div class="fg"><label>GPA ชั้น ป.6</label><input type="number" step="0.01" min="0" max="4" value="${s.gpa_p6||''}" onchange="DB.students[${idx}].gpa_p6=parseFloat(this.value)||0" style="font-weight:700;font-size:15px;color:var(--blue)"></div>
+        </div>
+      </div>
+      <div style="background:var(--teal-lt);border-radius:var(--rad);padding:12px 14px;border:1px solid rgba(13,107,82,0.12)">
+        <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">🎓 โรงเรียนปัจจุบัน (ม.1)</div>
+        <div class="form-grid">
+          <div class="fg fg-full"><label>ชื่อโรงเรียน ม.1</label><input value="${s.school_m1||''}" onchange="DB.students[${idx}].school_m1=this.value"></div>
+          <div class="fg"><label>จังหวัดที่ตั้งโรงเรียน</label><input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
+          <div class="fg"><label>สังกัด</label><input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
+          <div class="fg"><label>GPA ชั้น ม.1 (ล่าสุด)</label>
+            <input type="number" step="0.01" min="0" max="4" 
+              value="${getLatestGpa(s).gpa||''}" 
+              onchange="if(DB.students[${idx}].semGpa&&DB.students[${idx}].semGpa.length>0){DB.students[${idx}].semGpa[DB.students[${idx}].semGpa.length-1].gpa=parseFloat(this.value)||0;DB.students[${idx}].gpa.gpa=parseFloat(this.value)||0;refreshModalHeader(${idx})}"
+              style="font-weight:700;font-size:15px;color:var(--teal)"></div>
+        </div>
+      </div>
+    </div>
+    <!-- ส่วนที่ 4: พฤติกรรม / หมายเหตุ -->
+    <div class="form-section">
+      <div class="form-section-title">📝 พฤติกรรมนักเรียน / หมายเหตุ</div>
       <div class="form-grid">
         <div class="fg fg-full">
   <textarea placeholder="กรอกข้อมูลพฤติกรรมของนักเรียนที่นี่..." onchange="DB.students[${idx}].behavior=this.value">${s.behavior||''}</textarea>
 </div>
+      </div>
+    </div>
+    <!-- ส่วนที่ 5: พี่เลี้ยง -->
+    <div class="form-section">
+      <div class="form-section-title">👨‍🏫 ข้อมูลพี่เลี้ยง</div>
+      <div class="form-grid">
+        <div class="fg"><label>ชื่อ</label><input value="${s.mentor?.firstName||''}" placeholder="ชื่อ" onchange="if(!DB.students[${idx}].mentor)DB.students[${idx}].mentor={};DB.students[${idx}].mentor.firstName=this.value"></div>
+        <div class="fg"><label>สกุล</label><input value="${s.mentor?.lastName||''}" placeholder="นามสกุล" onchange="if(!DB.students[${idx}].mentor)DB.students[${idx}].mentor={};DB.students[${idx}].mentor.lastName=this.value"></div>
+        <div class="fg"><label>เบอร์โทร</label><input value="${s.mentor?.phone||''}" placeholder="08x-xxx-xxxx" onchange="if(!DB.students[${idx}].mentor)DB.students[${idx}].mentor={};DB.students[${idx}].mentor.phone=this.value"></div>
+        <div class="fg"><label>ตำแหน่ง</label><input value="${s.mentor?.position||''}" placeholder="เช่น ครูที่ปรึกษา" onchange="if(!DB.students[${idx}].mentor)DB.students[${idx}].mentor={};DB.students[${idx}].mentor.position=this.value"></div>
       </div>
     </div>
     <div class="form-section">
@@ -985,25 +1023,62 @@ function openStudentDetail(idx){
 function renderPaymentPanel(idx){
   const s=DB.students[idx];
   const recs=s.semPayments||[];
-  let html=`<div class="sem-records">`;
+  const grandTotal=recs.reduce((a,p)=>a+(p.p1||0)+(p.p2||0),0);
+  let html=``;
+  // Summary bar
+  if(recs.length>0){
+    html+=`<div style="background:var(--teal-lt);border:1px solid rgba(13,107,82,0.18);border-radius:var(--rad-lg);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:0.4px">💰 ยอดรวมทุกภาคเรียน</div>
+        <div style="font-size:22px;font-weight:700;color:var(--teal)">${fmt(grandTotal)} บาท</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text2)">${recs.length} ภาคเรียน</div>
+        <div style="font-size:12px;color:var(--text3)">ส่วนที่ 1: ${fmt(recs.reduce((a,p)=>a+(p.p1||0),0))} + ส่วนที่ 2: ${fmt(recs.reduce((a,p)=>a+(p.p2||0),0))}</div>
+      </div>
+    </div>`;
+  }
+  html+=`<div class="sem-records">`;
   recs.forEach((p,pi)=>{
     const total=(p.p1||0)+(p.p2||0);
+    const pct1=total>0?Math.round((p.p1||0)/total*100):0;
+    const pct2=total>0?Math.round((p.p2||0)/total*100):0;
     html+=`<div class="sem-record">
       <div class="sem-record-header" onclick="toggleSemRecord(this)">
-        <div class="sem-record-term">📅 ภาคเรียน ${p.term}</div>
-        <div style="font-size:13px;font-weight:700;color:var(--teal)">${fmt(total)} บาท</div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0"></div>
+        <div class="sem-record-term">ภาคเรียน <strong>${p.term}</strong></div>
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-left:auto">${fmt(total)} บาท</div>
         <div style="font-size:18px;color:var(--text3);margin-left:8px">▾</div>
       </div>
       <div class="sem-record-body">
+        <!-- ตารางสรุป -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 10px;border-bottom:1px solid var(--border)">
+          <div style="background:var(--blue-lt);border-radius:var(--rad);padding:10px 12px;border:1px solid rgba(26,95,168,0.12)">
+            <div style="font-size:10px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px">ส่วนที่ 1 (ค่าบำรุงฯ)</div>
+            <div style="font-size:18px;font-weight:700;color:var(--blue)">${fmt(p.p1||0)}</div>
+            <div style="font-size:10px;color:var(--text3)">บาท · ${pct1}%</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">${p.item1||'-'}</div>
+          </div>
+          <div style="background:var(--teal-lt);border-radius:var(--rad);padding:10px 12px;border:1px solid rgba(13,107,82,0.12)">
+            <div style="font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px">ส่วนที่ 2 (ค่าใช้จ่าย)</div>
+            <div style="font-size:18px;font-weight:700;color:var(--teal)">${fmt(p.p2||0)}</div>
+            <div style="font-size:10px;color:var(--text3)">บาท · ${pct2}%</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">${p.item2||'-'}</div>
+          </div>
+        </div>
+        <!-- แบบฟอร์มแก้ไข -->
         <div class="form-grid" style="padding:14px">
           <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value"></div>
-          <div class="fg"><label>ส่วนที่ 1 (บาท)</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
-          <div class="fg"><label>ส่วนที่ 2 (บาท)</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
-          <div class="fg"><label>รายการ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value"></div>
-          <div class="fg"><label>รายการ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value"></div>
-          <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบภาคเรียนนี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx})}">🗑 ลบ</button></div>
+          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value"></div>
+          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value"></div>
+          <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียน ${p.term||''} นี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx})}">🗑 ลบภาคเรียน</button></div>
         </div>
-        <div style="padding:0 14px 14px;font-size:13px">รวม: <strong style="color:var(--teal)">${fmt(total)} บาท</strong></div>
+        <div style="padding:0 14px 14px;font-size:13px;color:var(--text2)">
+          รวมภาคเรียนนี้: <strong style="color:var(--teal);font-size:15px">${fmt(total)} บาท</strong>
+          <span style="margin-left:8px;font-size:11px">(ส่วนที่ 1: ${fmt(p.p1||0)} + ส่วนที่ 2: ${fmt(p.p2||0)})</span>
+        </div>
       </div>
     </div>`;
   });
@@ -1168,12 +1243,13 @@ function renderPayment(){
   document.getElementById('payment-tbody').innerHTML=rows.map(({s,p})=>{
     const idx=DB.students.indexOf(s);
     const total=(p.p1||0)+(p.p2||0);
-    return`<tr><td>${s.no}</td><td style="font-weight:600">${s.name}</td>
+    return`<tr><td>${s.no}</td><td style="font-weight:600">${s.name}<div style="font-size:11px;color:var(--text3)">${s.nickname||''}</div></td>
+      <td style="font-size:12px">${s.school_m1||'-'}</td>
+      <td><span class="badge b-blue">${s.province||'-'}</span></td>
       <td><span class="badge b-gray">${p.term||'-'}</span></td>
-      <td>${fmt(p.p1||0)}</td><td>${fmt(p.p2||0)}</td>
-      <td style="font-weight:700;color:var(--teal)">${fmt(total)}</td>
-      <td style="font-size:12px">${p.item1||'-'}</td>
-      <td style="font-size:12px">${p.item2||'-'}</td>
+      <td><div style="font-weight:600;color:var(--blue)">${fmt(p.p1||0)}</div><div style="font-size:11px;color:var(--text3)">${p.item1||'-'}</div></td>
+      <td><div style="font-weight:600;color:var(--teal)">${fmt(p.p2||0)}</div><div style="font-size:11px;color:var(--text3)">${p.item2||'-'}</div></td>
+      <td style="font-weight:700;color:var(--teal);font-size:15px">${fmt(total)}</td>
       <td><button class="btn btn-sm" onclick="openStudentDetail(${idx});switchTabByName('ประวัติการเงิน')">แก้ไข</button></td></tr>`;
   }).join('');
   document.getElementById('payment-footer').textContent=`แสดง ${rows.length} รายการ • รวม ${fmt(totalAll)} บาท`;
