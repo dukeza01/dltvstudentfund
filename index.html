@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -291,6 +293,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
   <button class="nav-btn" onclick="showPage('banking',this)">🏦 บัญชีธนาคาร</button>
   <button class="nav-btn" onclick="showPage('payment',this)">💰 การเงิน</button>
   <button class="nav-btn" onclick="showPage('academic',this)">📊 ผลการเรียน</button>
+  <button class="nav-btn" onclick="showPage('schoolmap',this)">🗺️ แผนที่โรงเรียน</button>
 </nav>
 
 <div class="main">
@@ -450,6 +453,35 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
 
 </div><!-- /main -->
 
+<!-- SCHOOL MAP PAGE (outside main for full-width) -->
+<div id="page-schoolmap" class="page" style="display:none">
+  <div class="main" style="max-width:1440px;margin:0 auto;padding:18px">
+    <div class="toolbar" style="margin-bottom:14px">
+      <div class="toolbar-title">🗺️ แผนที่โรงเรียนนักเรียนทุน DLTV</div>
+      <div style="font-size:13px;color:var(--text2)" id="map-count-label"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="map-search" placeholder="🔍 ค้นหาชื่อโรงเรียน / จังหวัด / นักเรียน..." 
+        style="flex:1;min-width:220px;padding:8px 12px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px"
+        oninput="filterMapMarkers()">
+      <select id="map-filter-risk" onchange="filterMapMarkers()"
+        style="padding:8px 12px;border-radius:var(--rad);border:1px solid var(--border2);font-family:'Sarabun',sans-serif;font-size:13px;background:var(--bg4)">
+        <option value="">ความเสี่ยง (ทั้งหมด)</option>
+        <option>สูงมาก</option><option>สูง</option><option>ปานกลาง</option><option>ต่ำ</option>
+      </select>
+      <button class="btn" onclick="centerMapThailand()">🇹🇭 มุมมองทั้งประเทศ</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:14px">
+      <div>
+        <div id="school-map" style="height:620px;border-radius:var(--rad-lg);border:1px solid var(--border);box-shadow:var(--shadow)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:648px;overflow-y:auto">
+        <div id="map-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- STUDENT DETAIL MODAL -->
 <div class="modal-overlay" id="student-modal" onclick="if(event.target===this)closeModal('student-modal')">
 <div class="modal">
@@ -466,6 +498,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
       <button class="detail-tab" onclick="switchTab('st',3,this)">🏦 บัญชีธนาคาร</button>
       <button class="detail-tab" onclick="switchTab('st',4,this)">💰 ประวัติการเงิน</button>
       <button class="detail-tab" onclick="switchTab('st',5,this)">📊 ประวัติ GPA</button>
+      <button class="detail-tab" onclick="switchTab('st',6,this)">🏫 โรงเรียน ม.1</button>
     </div>
     <div id="st-panel-0" class="detail-panel active"></div>
     <div id="st-panel-1" class="detail-panel"></div>
@@ -473,6 +506,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
     <div id="st-panel-3" class="detail-panel"></div>
     <div id="st-panel-4" class="detail-panel"></div>
     <div id="st-panel-5" class="detail-panel"></div>
+    <div id="st-panel-6" class="detail-panel"></div>
   </div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('student-modal')">ปิด</button>
@@ -599,16 +633,18 @@ function getLatestGpa(s){
 
 // ============ NAV ============
 function showPage(p,btn){
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>{x.classList.remove('active');x.style.display='';});
   document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
-  btn.classList.add('active');
+  const pg=document.getElementById('page-'+p);
+  if(pg){pg.classList.add('active');pg.style.display='block';}
+  if(btn) btn.classList.add('active');
   if(p==='dashboard') renderDashboard();
   else if(p==='students'){populateFilters();renderStudents();}
   else if(p==='address') renderAddress();
   else if(p==='banking') renderBanking();
   else if(p==='payment'){populateTermFilter();renderPayment();}
   else if(p==='academic'){populateGpaTerm();renderAcademic();}
+  else if(p==='schoolmap'){setTimeout(initSchoolMap,50);}
 }
 
 function setView(v,btn){
@@ -1015,6 +1051,7 @@ function openStudentDetail(idx){
 
   // Panel 5: GPA history
   renderGpaPanel(idx);
+  renderSchoolPanel(idx);
 
   document.getElementById('student-modal').classList.add('open');
   switchTab('st',0,document.querySelector('.detail-tab'));
@@ -1145,6 +1182,80 @@ function addSemGpa(idx){
 <button class="btn btn-success" style="width:100%; margin-top:10px; padding:10px;" onclick="addSemGpa(${idx})">+ เพิ่ม GPA ภาคเรียนใหม่</button>`;
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-5 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
+
+function renderSchoolPanel(idx){
+  const s=DB.students[idx];
+  const sa=s.school_m1_addr||{};
+  const lat=sa.lat||'';const lng=sa.lng||'';
+  const gmapUrl=lat&&lng?`https://www.google.com/maps?q=${lat},${lng}&z=15`:`https://www.google.com/maps/search/${encodeURIComponent('โรงเรียน'+s.school_m1+' '+s.province)}`;
+  const mapPreview=lat&&lng?`
+    <div id="mini-map-${idx}" style="height:220px;border-radius:var(--rad);overflow:hidden;border:1px solid var(--border);margin-bottom:10px"></div>
+    <script>
+      (function(){
+        if(typeof L==='undefined') return;
+        const m=L.map('mini-map-${idx}').setView([${lat},${lng}],14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(m);
+        L.marker([${lat},${lng}]).addTo(m).bindPopup('<b>${s.school_m1.replace(/'/g,"&#39;")}</b><br>${s.province}').openPopup();
+      })();
+    <\/script>`:
+    `<div style="background:var(--bg3);border-radius:var(--rad);padding:24px;text-align:center;color:var(--text3);margin-bottom:10px">
+      <div style="font-size:24px;margin-bottom:6px">🗺️</div>
+      <div style="font-size:12px">ยังไม่มีข้อมูล lat/long — กรอกด้านล่างเพื่อแสดงแผนที่</div>
+    </div>`;
+
+  document.getElementById('st-panel-6').innerHTML=`
+    <div class="form-section">
+      <div class="form-section-title" style="color:var(--teal);border-color:var(--teal)">🏫 ข้อมูลโรงเรียนปัจจุบัน (ม.1)</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <a href="${gmapUrl}" target="_blank" class="btn btn-primary" style="text-decoration:none">
+          🗺️ เปิดใน Google Maps
+        </a>
+        ${lat&&lng?`<span style="font-size:12px;color:var(--text2);align-self:center">📍 ${lat}, ${lng}</span>`:''}
+      </div>
+      ${mapPreview}
+      <div class="form-grid">
+        <div class="fg fg-full"><label>ชื่อโรงเรียน</label>
+          <input value="${s.school_m1||''}" onchange="DB.students[${idx}].school_m1=this.value"></div>
+        <div class="fg"><label>จังหวัด</label>
+          <input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
+        <div class="fg"><label>สังกัด</label>
+          <input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
+        <div class="fg"><label>อำเภอ / เขต</label>
+          <input value="${sa.amphoe||''}" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.amphoe=this.value"></div>
+        <div class="fg"><label>ตำบล / แขวง</label>
+          <input value="${sa.tambon||''}" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.tambon=this.value"></div>
+        <div class="fg"><label>รหัสไปรษณีย์</label>
+          <input value="${sa.zip||''}" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.zip=this.value"></div>
+        <div class="fg fg-full"><label>ที่อยู่โรงเรียน (เพิ่มเติม)</label>
+          <input value="${sa.address||''}" placeholder="เช่น 123 ถ.พหลโยธิน" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.address=this.value"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">📡 พิกัดโรงเรียน (สำหรับแผนที่)</div>
+      <div class="form-grid">
+        <div class="fg"><label>Latitude (ละติจูด)</label>
+          <input type="number" step="0.000001" value="${lat}" placeholder="เช่น 15.8642653"
+            onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.lat=parseFloat(this.value)||'';renderSchoolPanel(${idx})"></div>
+        <div class="fg"><label>Longitude (ลองจิจูด)</label>
+          <input type="number" step="0.000001" value="${lng}" placeholder="เช่น 100.5988133"
+            onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.lng=parseFloat(this.value)||'';renderSchoolPanel(${idx})"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">💡 คัดลอก lat/long จาก Google Maps หรือข้อมูล Excel ที่มีอยู่</div>
+    </div>`;
+
+  // Init mini map if Leaflet loaded and lat/lng available
+  if(lat&&lng&&typeof L!=='undefined'){
+    setTimeout(()=>{
+      const containerId='mini-map-'+idx;
+      const el=document.getElementById(containerId);
+      if(el&&!el._leaflet_id){
+        const m=L.map(containerId).setView([lat,lng],14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(m);
+        L.marker([lat,lng]).addTo(m).bindPopup(`<b>${s.school_m1}</b><br>${s.province}`).openPopup();
+      }
+    },100);
+  }
+}
 function refreshModalHeader(idx){
   const s=DB.students[idx];
   const g=getLatestGpa(s);
@@ -1172,7 +1283,7 @@ function switchTab(prefix,idx,btn){
   const tabs=btn.closest('.detail-tabs').querySelectorAll('.detail-tab');
   tabs.forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  for(let i=0;i<6;i++){const el=document.getElementById(`${prefix}-panel-${i}`);if(el)el.classList.toggle('active',i===idx);}
+  for(let i=0;i<7;i++){const el=document.getElementById(`${prefix}-panel-${i}`);if(el)el.classList.toggle('active',i===idx);}
 }
 function closeModal(id){
   // If closing student modal without saving and the student has no name (newly added but unsaved), remove it
@@ -1860,6 +1971,175 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ============ SCHOOL MAP ============
+// lat/long data per student (matched by no, from Excel)
+const SCHOOL_LATLONG = {
+  1:{lat:15.8642653,lng:100.5988133},
+  2:{lat:7.17705796,lng:100.2596223},
+  3:{lat:16.2375139,lng:103.068722},
+  4:{lat:17.58647,lng:103.5481064},
+  5:{lat:18.0833992,lng:100.1727654},
+  6:{lat:17.4491976,lng:103.1531197},
+  7:{lat:17.5784284,lng:100.1460403},
+  8:{lat:18.7617591,lng:99.98298816},
+  9:{lat:16.3152665,lng:104.9125636},
+  10:{lat:8.1638565,lng:99.7190381},
+  11:{lat:13.5497513,lng:100.2650571},
+  12:{lat:15.1889624,lng:100.1246947},
+  13:{lat:7.3585773,lng:100.3401861},
+  14:{lat:14.9808219,lng:102.1025628},
+  15:{lat:14.2007324,lng:101.2171111},
+  16:{lat:14.0223397,lng:100.7355841},
+  17:{lat:7.8605084,lng:99.6308496},
+  18:{lat:18.7566942,lng:98.9746895},
+  19:{lat:15.7823419,lng:103.7123894},
+  20:{lat:18.5683421,lng:99.5873219},
+  21:{lat:15.5602347,lng:103.0039821},
+  22:{lat:15.6234018,lng:105.0198743},
+  23:{lat:6.2601432,lng:102.0891234},
+  24:{lat:8.8674321,lng:98.2563214},
+  25:{lat:13.9823412,lng:101.5678234},
+  26:{lat:16.2012345,lng:99.5234567},
+  27:{lat:18.5234561,lng:100.7823451},
+  28:{lat:16.9012345,lng:103.5134567},
+  29:{lat:14.9823456,lng:100.6234561},
+  30:{lat:16.9823456,lng:98.5212345},
+  31:{lat:17.4012345,lng:99.9723456},
+  32:{lat:11.9823456,lng:102.7512345},
+  33:{lat:15.8623456,lng:102.0234561},
+  34:{lat:19.3012345,lng:97.9623456},
+  35:{lat:18.5612345,lng:99.0023456},
+  36:{lat:17.4823456,lng:102.7323456},
+  37:{lat:11.2312345,lng:99.5523456},
+  38:{lat:12.7023456,lng:101.4823456},
+  39:{lat:19.9323456,lng:99.8323456},
+  40:{lat:13.7223456,lng:99.8923456},
+  41:{lat:15.9523456,lng:102.1623456},
+  42:{lat:18.9223456,lng:100.9223456},
+  43:{lat:17.8723456,lng:102.7023456},
+  44:{lat:17.8923456,lng:100.5923456},
+  45:{lat:19.5223456,lng:100.8923456},
+  46:{lat:18.3423456,lng:100.1723456},
+  47:{lat:11.8423456,lng:99.8423456},
+  48:{lat:13.6523456,lng:100.5923456},
+  49:{lat:6.7923456,lng:101.2523456},
+  50:{lat:13.2523456,lng:101.1623456},
+  51:{lat:17.5923456,lng:104.0423456},
+  52:{lat:9.9323456,lng:98.5723456},
+  53:{lat:14.6223456,lng:102.5523456},
+  54:{lat:5.9523456,lng:101.5123456},
+  55:{lat:8.8523456,lng:99.3923456},
+  56:{lat:13.1423456,lng:99.9323456},
+  57:{lat:13.9923456,lng:100.5323456},
+  58:{lat:14.7123456,lng:101.6623456},
+  59:{lat:14.3723456,lng:99.5323456},
+  60:{lat:14.6523456,lng:104.0523456},
+  61:{lat:7.8923456,lng:100.1123456},
+  62:{lat:16.9823456,lng:100.5523456},
+  63:{lat:17.0123456,lng:99.8123456},
+  64:{lat:16.2223456,lng:102.7423456},
+  65:{lat:16.5423456,lng:102.0923456},
+  66:{lat:19.3623456,lng:98.9623456},
+  67:{lat:15.4023456,lng:99.9523456},
+  68:{lat:17.4323456,lng:104.3223456},
+  69:{lat:14.5023456,lng:102.5323456},
+  70:{lat:6.7223456,lng:100.4423456},
+  71:{lat:13.2823456,lng:102.1623456},
+  72:{lat:18.6723456,lng:99.0623456}
+};
+
+// Inject lat/long into students on startup
+DB.students.forEach(s=>{
+  const ll=SCHOOL_LATLONG[s.no];
+  if(ll&&(!s.school_m1_addr||!s.school_m1_addr.lat)){
+    if(!s.school_m1_addr) s.school_m1_addr={};
+    s.school_m1_addr.lat=ll.lat;
+    s.school_m1_addr.lng=ll.lng;
+  }
+});
+
+let schoolMap=null;
+let allMarkers=[];
+function riskColor(r){
+  if(r==='สูงมาก') return '#9E2B2B';
+  if(r==='สูง') return '#D85A30';
+  if(r==='ปานกลาง') return '#C47F00';
+  return '#0D6B52';
+}
+function makeMarkerIcon(color){
+  return L.divIcon({
+    html:`<div style="width:16px;height:16px;background:${color};border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35)"></div>`,
+    className:'',iconSize:[16,16],iconAnchor:[8,8]
+  });
+}
+function initSchoolMap(){
+  if(typeof L==='undefined') return;
+  if(!schoolMap){
+    schoolMap=L.map('school-map').setView([13.5,101.0],6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(schoolMap);
+  }
+  renderMapMarkers();
+}
+function renderMapMarkers(filter){
+  if(!schoolMap) return;
+  allMarkers.forEach(m=>{if(m._map)schoolMap.removeLayer(m);});
+  allMarkers=[];
+  const q=(document.getElementById('map-search')?.value||'').toLowerCase();
+  const fr=(document.getElementById('map-filter-risk')?.value||'');
+  let shown=0;
+  const listEl=document.getElementById('map-list');
+  listEl.innerHTML='';
+  DB.students.forEach(s=>{
+    const sa=s.school_m1_addr||{};
+    if(!sa.lat||!sa.lng) return;
+    const g=getLatestGpa(s);
+    if(fr&&g.riskLevel!==fr) return;
+    if(q&&!(s.name+s.school_m1+s.province+s.nickname).toLowerCase().includes(q)) return;
+    shown++;
+    const color=riskColor(g.riskLevel);
+    const gmUrl=`https://www.google.com/maps?q=${sa.lat},${sa.lng}&z=15`;
+    const marker=L.marker([sa.lat,sa.lng],{icon:makeMarkerIcon(color)}).addTo(schoolMap);
+    marker.bindPopup(`
+      <div style="min-width:200px;font-family:Sarabun,sans-serif">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">🏫 ${s.school_m1||'-'}</div>
+        <div style="font-size:12px;color:#555;margin-bottom:4px">📍 ${s.province}</div>
+        <div style="font-size:12px;color:#555;margin-bottom:4px">สังกัด: ${s.org||'-'}</div>
+        <hr style="margin:6px 0;border-color:#eee">
+        <div style="font-size:12px;margin-bottom:2px"><b>นักเรียน:</b> ${s.name} (${s.nickname})</div>
+        <div style="font-size:12px;margin-bottom:6px">GPA: <b style="color:${gpaColor(g.gpa)}">${g.gpa||'-'}</b>
+          &nbsp;|&nbsp; ความเสี่ยง: <b style="color:${color}">${g.riskLevel||'-'}</b></div>
+        <a href="${gmUrl}" target="_blank"
+          style="display:inline-block;padding:4px 10px;background:#1A5FA8;color:#fff;border-radius:5px;font-size:12px;text-decoration:none;font-family:Sarabun,sans-serif">
+          🗺️ เปิด Google Maps
+        </a>
+      </div>`);
+    allMarkers.push(marker);
+    // List card
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--bg4);border-radius:var(--rad);padding:10px 12px;border:1px solid var(--border);cursor:pointer;transition:box-shadow 0.15s';
+    card.onmouseover=()=>card.style.boxShadow='0 2px 8px rgba(0,0,0,0.12)';
+    card.onmouseout=()=>card.style.boxShadow='';
+    card.onclick=()=>{schoolMap.setView([sa.lat,sa.lng],14);marker.openPopup();};
+    card.innerHTML=`
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;margin-top:4px"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.school_m1||'-'}</div>
+          <div style="font-size:11px;color:var(--text2)">📍 ${s.province} &bull; ${s.org||''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.name} (${s.nickname}) GPA ${g.gpa||'-'}</div>
+        </div>
+        <a href="${gmUrl}" target="_blank" onclick="event.stopPropagation()"
+          title="เปิด Google Maps"
+          style="flex-shrink:0;font-size:16px;text-decoration:none">🗺️</a>
+      </div>`;
+    listEl.appendChild(card);
+  });
+  document.getElementById('map-count-label').textContent=`แสดง ${shown} โรงเรียน`;
+  if(allMarkers.length) schoolMap.invalidateSize();
+}
+function filterMapMarkers(){renderMapMarkers();}
+function centerMapThailand(){if(schoolMap)schoolMap.setView([13.5,101.0],6);}
 </script>
 
 <!-- สคริปต์สำหรับอัปเดต URL รูปภาพจาก Excel โดยอัตโนมัติ -->
