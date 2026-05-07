@@ -470,10 +470,13 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);fon
         <option>สูงมาก</option><option>สูง</option><option>ปานกลาง</option><option>ต่ำ</option>
       </select>
       <button class="btn" onclick="centerMapThailand()">🇹🇭 มุมมองทั้งประเทศ</button>
+      <button id="sync-latlng-btn" class="btn btn-primary" onclick="syncLatLngFromSheet()" title="ดึง lat/lng จาก Google Sheet">🔄 ซิงค์ lat/lng จาก Sheet</button>
+      <button class="btn" onclick="applyLatLngJSON()" title="วาง JSON lat/lng โดยตรง">📋 วาง JSON lat/lng</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 340px;gap:14px">
       <div>
         <div id="school-map" style="height:620px;border-radius:var(--rad-lg);border:1px solid var(--border);box-shadow:var(--shadow)"></div>
+    <div id="map-notice" style="display:none;padding:8px 14px;border-radius:var(--rad);background:var(--bg2);margin-bottom:10px;font-size:13px;font-weight:600"></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;max-height:648px;overflow-y:auto">
         <div id="map-list" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -570,6 +573,91 @@ let charts={};
 
 // ============ UTILS ============
 const fmt=n=>Number(n||0).toLocaleString('th-TH');
+
+// คำนวณอายุจากวันเกิด (รองรับปี พ.ศ.)
+function calcAge(dob){
+  if(!dob) return '-';
+  const parts = String(dob).split('-');
+  if(parts.length < 3) return '-';
+  let by = parseInt(parts[0]);
+  const m = parseInt(parts[1]);
+  const d = parseInt(parts[2]);
+  // ถ้า by > 2400 ถือเป็น พ.ศ. ให้แปลงเป็น ค.ศ.
+  const cy = by > 2400 ? by - 543 : by;
+  const today = new Date();
+  let age = today.getFullYear() - cy;
+  const monthDiff = (today.getMonth()+1) - m;
+  if(monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) age--;
+  return (age > 0 && age < 30) ? age + ' ปี' : '-';
+}
+
+// ============ GOOGLE SHEET LAT/LNG SYNC ============
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxDqgai5n-lc7t7o7fuNa1FYTkawfI3x45tS--kLwkh2WY2jc8YjDryKvyWeCK01TJeiQ/exec';
+
+async function syncLatLngFromSheet(){
+  const btn = document.getElementById('sync-latlng-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ กำลังซิงค์...'; }
+  try {
+    const res = await fetch(SHEET_API_URL + '?action=getLatLng', {mode:'cors'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(!Array.isArray(data)) throw new Error('รูปแบบข้อมูลไม่ถูกต้อง (ต้องเป็น Array)');
+    let updated = 0;
+    data.forEach(row => {
+      const idx = DB.students.findIndex(s => String(s.no) === String(row.no));
+      if(idx >= 0 && (row.lat || row.lng)){
+        if(!DB.students[idx].school_m1_addr) DB.students[idx].school_m1_addr = {};
+        if(row.lat) DB.students[idx].school_m1_addr.lat = parseFloat(row.lat);
+        if(row.lng) DB.students[idx].school_m1_addr.lng = parseFloat(row.lng);
+        if(row.amphoe) DB.students[idx].school_m1_addr.amphoe = row.amphoe;
+        if(row.tambon) DB.students[idx].school_m1_addr.tambon = row.tambon;
+        updated++;
+      }
+    });
+    saveToStorage();
+    renderMapMarkers();
+    if(btn){ btn.disabled=false; btn.textContent='🔄 ซิงค์ lat/lng จาก Google Sheet'; }
+    showMapNotice('✅ ซิงค์สำเร็จ อัปเดต '+updated+' โรงเรียน','#3A6A10');
+  } catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='🔄 ซิงค์ lat/lng จาก Google Sheet'; }
+    showMapNotice('❌ ซิงค์ไม่สำเร็จ: '+e.message,'#9E2B2B');
+  }
+}
+
+// วาง JSON lat/lng จาก clipboard หรือ export จาก Sheet โดยตรง
+// รูปแบบ: [{"no":1,"lat":15.123,"lng":100.456}, ...]
+function applyLatLngJSON(){
+  const jsonStr = prompt('วาง JSON lat/lng ที่นี่\nรูปแบบ: [{"no":1,"lat":15.12,"lng":100.45}, ...]\n\n(คัดลอกจาก Google Sheet หรือ Apps Script)');
+  if(!jsonStr) return;
+  try{
+    const data = JSON.parse(jsonStr);
+    let updated = 0;
+    data.forEach(row => {
+      const idx = DB.students.findIndex(s => String(s.no) === String(row.no));
+      if(idx>=0 && (row.lat||row.lng)){
+        if(!DB.students[idx].school_m1_addr) DB.students[idx].school_m1_addr={};
+        if(row.lat) DB.students[idx].school_m1_addr.lat = parseFloat(row.lat);
+        if(row.lng) DB.students[idx].school_m1_addr.lng = parseFloat(row.lng);
+        updated++;
+      }
+    });
+    saveToStorage();
+    renderMapMarkers();
+    showMapNotice('✅ อัปเดต lat/lng สำเร็จ '+updated+' รายการ','#3A6A10');
+  }catch(e){
+    alert('❌ JSON ไม่ถูกต้อง: '+e.message);
+  }
+}
+
+function showMapNotice(msg, color){
+  const el = document.getElementById('map-notice');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = color||'var(--text)';
+  el.style.display = 'block';
+  setTimeout(()=>{ el.style.display='none'; }, 5000);
+}
+
 function gpaColor(g){
   if(!g||g===0) return '#aaa';
   if(g>=3.5) return '#3A6A10';
@@ -826,7 +914,7 @@ function renderStudents(){
         <td class="photo-cell">${photoEl(s)}</td>
         <td><div style="font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text3)">${s.nickname}</div></td>
         <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${s.id}</td>
-        <td style="font-size:12px">${s.dob||'-'}</td>
+        <td style="font-size:12px">${s.dob||'-'}<div style="font-size:11px;color:var(--blue);font-weight:600">${calcAge(s.dob)}</div></td>
         <td style="font-size:12px">${s.phone||'-'}</td>
         <td style="font-size:12px">${s.school_m1}</td>
         <td><span class="badge b-blue">${s.province}</span></td>
@@ -899,6 +987,7 @@ function openStudentDetail(idx){
         <div class="fg"><label>ชื่อเล่น</label><input value="${s.nickname||''}" onchange="DB.students[${idx}].nickname=this.value;refreshModalHeader(${idx})"></div>
         <div class="fg"><label>เลขบัตรประชาชน</label><input value="${s.id||''}" onchange="DB.students[${idx}].id=this.value"></div>
         <div class="fg"><label>วันเดือนปีเกิด</label><input type="date" value="${s.dob||''}" onchange="DB.students[${idx}].dob=this.value"></div>
+        <div class="fg"><label>อายุ (Age)</label><input readonly value="${calcAge(s.dob)}" style="background:var(--bg2);color:var(--text2);cursor:default" title="คำนวณอัตโนมัติจากวันเกิด"></div>
         <div class="fg"><label>โทรศัพท์นักเรียน</label><input value="${s.phone||''}" onchange="DB.students[${idx}].phone=this.value"></div>
         <div class="fg"><label>ชื่อ-สกุล ผู้ปกครอง</label><input value="${s.parent||''}" onchange="DB.students[${idx}].parent=this.value"></div>
         <div class="fg"><label>โทรศัพท์ผู้ปกครอง</label><input value="${s.parentPhone||''}" onchange="DB.students[${idx}].parentPhone=this.value"></div>
