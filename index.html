@@ -616,7 +616,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzSLEsHqqokgJSoEQScP_LGf91u1PR_sVcr7_vEpxehDJXdAPxaSNTkkZpa33yOGNbAkw/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzdJYOnaZOyoSy9DZh5YOMwPhj9Ry_y91xoQaqGn3sRnNBVkEPBVfgYZkT-8_Sbr_W8Ng/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1596,7 +1596,7 @@ function switchPhotoSource(type, btn, idx) {
 // ============ LOCAL STORAGE PERSISTENCE ============
 const STORAGE_KEY = 'dltv_student_photos';
 const STORAGE_KEY_DATA = 'dltv_students_data';
-const DATA_VERSION = '2568v4_payment_sheet'; // v4: Payment แยก Sheet
+const DATA_VERSION = '2568v5_field_complete'; // v4: Payment แยก Sheet
 // ล้าง cache เก่าถ้า version ไม่ตรง (ล้างทั้งหมดเพื่อให้โหลดข้อมูลใหม่จาก RAW)
 if (localStorage.getItem('dltv_data_version') !== DATA_VERSION) {
   localStorage.removeItem(STORAGE_KEY_DATA);
@@ -1771,11 +1771,47 @@ function normalizeStudent(s) {
 
   if (!s.mentor) s.mentor = { firstName:'', lastName:'', phone:'', position:'' };
   if (!s.hasOwnProperty('behavior')) s.behavior = '';
-  // ensure school_m1_addr exists and preserves district/amphoe
+
+  // ── school_m1_addr: ensure ครบทุก field ──────────────────
   if (!s.school_m1_addr) s.school_m1_addr = {};
-  // ถ้ามี district หรือ amphoe ตรง top-level (จาก GAS เก่า) ให้ merge เข้า school_m1_addr
-  if (!s.school_m1_addr.district && s.district) s.school_m1_addr.district = s.district;
-  if (!s.school_m1_addr.amphoe && s.school_amphoe) s.school_m1_addr.amphoe = s.school_amphoe;
+  const sm = s.school_m1_addr;
+  if (!sm.district && s.district) sm.district = s.district;
+  if (!sm.amphoe && s.school_amphoe) sm.amphoe = s.school_amphoe;
+  if (!sm.hasOwnProperty('district')) sm.district = '';
+  if (!sm.hasOwnProperty('amphoe'))   sm.amphoe   = '';
+  if (!sm.hasOwnProperty('tambon'))   sm.tambon   = '';
+  if (!sm.hasOwnProperty('zip'))      sm.zip      = '';
+  if (!sm.hasOwnProperty('address'))  sm.address  = '';
+  if (!sm.hasOwnProperty('lat'))      sm.lat      = '';
+  if (!sm.hasOwnProperty('lng'))      sm.lng      = '';
+
+  // ── sync gpa top-level ↔ semGpa[last] ────────────────────
+  if (Array.isArray(s.semGpa) && s.semGpa.length > 0) {
+    const lastG = s.semGpa[s.semGpa.length - 1];
+    if (!s.gpa) s.gpa = {};
+    s.gpa.gpa           = lastG.gpa           || s.gpa.gpa           || 0;
+    s.gpa.riskLevel     = lastG.riskLevel     || s.gpa.riskLevel     || 'ปานกลาง';
+    s.gpa.hasObstacle   = lastG.hasObstacle   !== undefined ? lastG.hasObstacle : (s.gpa.hasObstacle||false);
+    s.gpa.obstacleType  = lastG.obstacleType  || s.gpa.obstacleType  || '';
+    s.gpa.weakSubjects  = lastG.weakSubjects  || s.gpa.weakSubjects  || '';
+    s.gpa.schoolSupport = lastG.schoolSupport || s.gpa.schoolSupport || '';
+  } else if (!s.gpa) {
+    s.gpa = { gpa:0, riskLevel:'ปานกลาง', hasObstacle:false, obstacleType:'', weakSubjects:'', schoolSupport:'' };
+  }
+
+  // ── ensure addr ครบ ───────────────────────────────────────
+  if (!s.addr) s.addr = {};
+  ['moo','village','tambon','amphoe','province','zip','nat','rel'].forEach(k => {
+    if (!s.addr.hasOwnProperty(k)) s.addr[k] = '';
+  });
+
+  // ── ensure bank ครบ ───────────────────────────────────────
+  if (!s.bank) s.bank = {};
+  ['contract','contractDate','bankSt','branchSt','accNoSt','accNameSt',
+   'bankSch','branchSch','accNoSch','accNameSch'].forEach(k => {
+    if (!s.bank.hasOwnProperty(k)) s.bank[k] = '';
+  });
+
   return s;
 }
 
