@@ -1314,6 +1314,8 @@ function renderSchoolPanel(idx){
           <input value="${s.province||''}" onchange="DB.students[${idx}].province=this.value"></div>
         <div class="fg"><label>สังกัด</label>
           <input value="${s.org||''}" onchange="DB.students[${idx}].org=this.value"></div>
+        <div class="fg"><label>เขตพื้นที่การศึกษา (District)</label>
+          <input value="${sa.district||''}" placeholder="เช่น สพม.นครสวรรค์" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.district=this.value"></div>
         <div class="fg"><label>อำเภอ / เขต</label>
           <input value="${sa.amphoe||''}" onchange="if(!DB.students[${idx}].school_m1_addr)DB.students[${idx}].school_m1_addr={};DB.students[${idx}].school_m1_addr.amphoe=this.value"></div>
         <div class="fg"><label>ตำบล / แขวง</label>
@@ -1698,7 +1700,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAlgIoFFA8eNTcjxOCYZLWWDl7Tz3_BHgaJT7RuImmJ464WSd8ShJFyUu3-NK5_ZWPBQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNfdmU4cjN_kiGmB5gltZT_UVBLtNTj1_QfOUGpAxn8o1xDbaFPPcQKPPqgpfvWJpa/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -1752,6 +1754,11 @@ function normalizeStudent(s) {
 
   if (!s.mentor) s.mentor = { firstName:'', lastName:'', phone:'', position:'' };
   if (!s.hasOwnProperty('behavior')) s.behavior = '';
+  // ensure school_m1_addr exists and preserves district/amphoe
+  if (!s.school_m1_addr) s.school_m1_addr = {};
+  // ถ้ามี district หรือ amphoe ตรง top-level (จาก GAS เก่า) ให้ merge เข้า school_m1_addr
+  if (!s.school_m1_addr.district && s.district) s.school_m1_addr.district = s.district;
+  if (!s.school_m1_addr.amphoe && s.school_amphoe) s.school_m1_addr.amphoe = s.school_amphoe;
   return s;
 }
 
