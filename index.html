@@ -626,7 +626,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbynCvPXyWePXWrgEYzUrC_VbeZuQpqQq749MAfS7jnia8dBgCitV1kggoNq-shyzJcGfQ/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzJiHHe32m4K7kpt9xWQaWss_NA_7Xwex3g4PzpgAOo5bmctYqn-7YOlfsnuasXfzmHgA/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1784,55 +1784,148 @@ function parseJsonField(val) {
 }
 
 function normalizeStudent(s) {
-  // parse semPayments — มาจาก Payment Sheet แยก หรืออาจเป็น JSON string
+  // ── 1. map ฟิลด์ระดับบนสุดจาก Sheet → school_m1_addr ──────
+  // Sheet ส่งมา: district, Amphoe, lat, lng, directorM_1, Tel.directorM_1, AdvisorM_1, TelAdvisorM_1
+  if (!s.school_m1_addr) s.school_m1_addr = {};
+
+  // district (ตำบลที่ตั้งโรงเรียน)
+  if (!s.school_m1_addr.district && s.district) s.school_m1_addr.district = s.district;
+
+  // Amphoe (Sheet ใช้ capital A)
+  if (!s.school_m1_addr.amphoe) {
+    s.school_m1_addr.amphoe = s.Amphoe || s.amphoe || s.school_amphoe || '';
+  }
+
+  // lat / lng
+  if (!s.school_m1_addr.lat && s.lat) s.school_m1_addr.lat = Number(s.lat) || '';
+  if (!s.school_m1_addr.lng && s.lng) s.school_m1_addr.lng = Number(s.lng) || '';
+
+  // director & advisor (Sheet ใช้ underscore + capital naming)
+  if (!s.school_m1_addr.directorM1)    s.school_m1_addr.directorM1    = s.directorM_1     || s.directorM1     || '';
+  if (!s.school_m1_addr.telDirectorM1) s.school_m1_addr.telDirectorM1 = s.Tel_directorM_1 || s.telDirectorM1  || '';
+  if (!s.school_m1_addr.advisorM1)     s.school_m1_addr.advisorM1     = s.AdvisorM_1      || s.advisorM1      || '';
+  if (!s.school_m1_addr.telAdvisorM1)  s.school_m1_addr.telAdvisorM1  = s.TelAdvisorM_1   || s.telAdvisorM1   || '';
+
+  // ทำให้ทุกฟิลด์มีค่าเริ่มต้น
+  ['district','amphoe','tambon','zip','address','directorM1','telDirectorM1','advisorM1','telAdvisorM1'].forEach(k=>{
+    if (s.school_m1_addr[k] === undefined) s.school_m1_addr[k] = '';
+  });
+
+  // ── 2. map addr ──────────────────────────────────────────────
+  // Sheet ส่ง addr.addr (บ้านเลขที่ฝั่ง addr object), addr_nat (ระดับบน)
+  if (!s.addr) s.addr = {};
+  if (!s.addr.no  && s.addr.addr) s.addr.no  = s.addr.addr;   // บ้านเลขที่
+  if (!s.addr.nat && s.addr_nat)  s.addr.nat  = s.addr_nat;    // สัญชาติ
+  if (!s.addr.rel && s.religion)  s.addr.rel  = s.religion;    // ศาสนา
+  // ทำให้ทุกฟิลด์มีค่าเริ่มต้น
+  ['no','moo','village','tambon','amphoe','province','zip','nat','rel'].forEach(k=>{
+    if (s.addr[k] === undefined) s.addr[k] = '';
+  });
+
+  // ── 3. mentor ─────────────────────────────────────────────────
+  // Sheet ส่ง mentor_firstName, mentor_lastName ระดับบนสุด
+  if (!s.mentor || typeof s.mentor !== 'object') s.mentor = {};
+  if (!s.mentor.firstName) s.mentor.firstName = s.mentor_firstName || '';
+  if (!s.mentor.lastName)  s.mentor.lastName  = s.mentor_lastName  || '';
+  if (!s.mentor.phone)     s.mentor.phone     = s.mentor_phone     || '';
+  if (!s.mentor.position)  s.mentor.position  = s.mentor_position  || '';
+
+  // ── 4. behavior ───────────────────────────────────────────────
+  if (!s.hasOwnProperty('behavior')) s.behavior = '';
+
+  // ── 5. semPayments ─────────────────────────────────────────────
   const pp = parseJsonField(s.semPayments);
   if (pp && pp.length > 0) {
     s.semPayments = pp.map(p => ({
       term: p.term || '', p1: Number(p.p1)||0, p2: Number(p.p2)||0,
       item1: p.item1||'ค่าเงินบำรุงการศึกษา', item2: p.item2||'ค่าใช้จ่ายในการเรียน'
     }));
-  } else if (!Array.isArray(s.semPayments) || s.semPayments.length === 0) {
-    // ไม่มีข้อมูลการเงิน (Payment อยู่ใน Sheet แยกแล้ว)
+  } else if (!Array.isArray(s.semPayments)) {
     s.semPayments = [];
   }
 
-  // parse semGpa — อาจเป็น JSON string จาก Sheet
+  // ── 6. semGpa ─────────────────────────────────────────────────
+  // Sheet ไม่ได้ส่ง semGpa มา — ต้องสร้างจาก gpa object
   const pg = parseJsonField(s.semGpa);
   if (pg && pg.length > 0) {
     s.semGpa = pg.map(g => ({
-      term: g.term||'', gpa: Number(g.gpa)||0,
+      term: g.term||'1/2568', gpa: Number(g.gpa)||0,
       riskLevel: g.riskLevel||'ปานกลาง',
       hasObstacle: g.hasObstacle===true||g.hasObstacle==='true'||g.hasObstacle==='TRUE',
       obstacleType: g.obstacleType||'', weakSubjects: g.weakSubjects||'', schoolSupport: g.schoolSupport||''
     }));
   } else if (!Array.isArray(s.semGpa) || s.semGpa.length === 0) {
-    s.semGpa = [{ term:'1/2568', gpa: Number(s.gpa?.gpa)||0, riskLevel: s.gpa?.riskLevel||'ปานกลาง',
-      hasObstacle: s.gpa?.hasObstacle||false, obstacleType: s.gpa?.obstacleType||'',
-      weakSubjects: s.gpa?.weakSubjects||'', schoolSupport: s.gpa?.schoolSupport||'' }];
+    // สร้าง semGpa จากข้อมูล gpa ใน Sheet
+    const gpaObj = s.gpa || {};
+    s.semGpa = [{
+      term:         gpaObj.term        || '1/2568',
+      gpa:          Number(gpaObj.gpa) || 0,
+      riskLevel:    gpaObj.riskLevel   || 'ปานกลาง',
+      hasObstacle:  gpaObj.hasObstacle === true || gpaObj.hasObstacle === 'TRUE' || gpaObj.hasObstacle === 'true',
+      obstacleType: gpaObj.obstacleType  || '',
+      weakSubjects: gpaObj.weakSubjects  || '',
+      schoolSupport:gpaObj.schoolSupport || ''
+    }];
   }
 
-  if (!s.mentor) s.mentor = { firstName:'', lastName:'', phone:'', position:'' };
-  if (!s.hasOwnProperty('behavior')) s.behavior = '';
-  // ensure school_m1_addr exists พร้อมทุกฟิลด์
-  if (!s.school_m1_addr) s.school_m1_addr = {};
-  // migrate top-level fields → school_m1_addr (backward compat)
-  if (!s.school_m1_addr.district && s.district) s.school_m1_addr.district = s.district;
-  if (!s.school_m1_addr.amphoe && s.school_amphoe) s.school_m1_addr.amphoe = s.school_amphoe;
-  if (!s.school_m1_addr.directorM1 && s.directorM1) s.school_m1_addr.directorM1 = s.directorM1;
-  if (!s.school_m1_addr.telDirectorM1 && s.telDirectorM1) s.school_m1_addr.telDirectorM1 = s.telDirectorM1;
-  if (!s.school_m1_addr.advisorM1 && s.advisorM1) s.school_m1_addr.advisorM1 = s.advisorM1;
-  if (!s.school_m1_addr.telAdvisorM1 && s.telAdvisorM1) s.school_m1_addr.telAdvisorM1 = s.telAdvisorM1;
-  ['district','amphoe','tambon','zip','address','directorM1','telDirectorM1','advisorM1','telAdvisorM1'].forEach(k=>{
-    if(s.school_m1_addr[k]===undefined) s.school_m1_addr[k]='';
-  });
+  // ── 7. gpa object (sync กับ semGpa ล่าสุด) ────────────────────
+  if (!s.gpa || typeof s.gpa !== 'object') s.gpa = {};
+  const latestG = s.semGpa[s.semGpa.length - 1] || {};
+  if (!s.gpa.gpa)           s.gpa.gpa          = latestG.gpa          || 0;
+  if (!s.gpa.riskLevel)     s.gpa.riskLevel     = latestG.riskLevel    || 'ปานกลาง';
+  if (s.gpa.hasObstacle === undefined) s.gpa.hasObstacle = latestG.hasObstacle || false;
+  if (!s.gpa.obstacleType)  s.gpa.obstacleType  = latestG.obstacleType || '';
+  if (!s.gpa.weakSubjects)  s.gpa.weakSubjects  = latestG.weakSubjects || '';
+  if (!s.gpa.schoolSupport) s.gpa.schoolSupport = latestG.schoolSupport|| '';
+
+  // ── 8. bank fallback ──────────────────────────────────────────
+  if (!s.bank || typeof s.bank !== 'object') s.bank = {};
+
   return s;
 }
 
 function cleanForSheet(s) {
-  return { ...s,
+  // แปลง JS object กลับเป็นโครงสร้างที่ GAS (buildStdRow) เข้าใจ
+  // GAS อ่านฟิลด์: district, Amphoe, lat., long., directorM_1, Tel.directorM_1, AdvisorM_1, TelAdvisorM_1
+  // GAS อ่าน mentor: mentor_firstName, mentor_lastName (ระดับบน)
+  const sa = s.school_m1_addr || {};
+  const latestGpa = (s.semGpa && s.semGpa.length > 0) ? s.semGpa[s.semGpa.length - 1] : (s.gpa || {});
+  return {
+    ...s,
+    // รูปภาพ: ไม่ส่ง base64 ไป Sheet
     photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl||''),
-    mentor: { firstName: s.mentor?.firstName||'', lastName: s.mentor?.lastName||'', phone: s.mentor?.phone||'', position: s.mentor?.position||'' },
-    behavior: s.behavior || ''
+    // map school_m1_addr กลับเป็น top-level fields ที่ GAS รู้จัก
+    district:        sa.district        || '',
+    Amphoe:          sa.amphoe          || '',
+    lat:             sa.lat             || '',
+    lng:             sa.lng             || '',
+    directorM_1:     sa.directorM1      || '',
+    Tel_directorM_1: sa.telDirectorM1   || '',
+    AdvisorM_1:      sa.advisorM1       || '',
+    TelAdvisorM_1:   sa.telAdvisorM1    || '',
+    // map mentor กลับเป็น top-level fields ที่ GAS รู้จัก
+    mentor_firstName: s.mentor?.firstName || '',
+    mentor_lastName:  s.mentor?.lastName  || '',
+    mentor_phone:     s.mentor?.phone     || '',
+    mentor_position:  s.mentor?.position  || '',
+    // sync gpa object จาก semGpa ล่าสุด (GAS อ่านจาก gpa.gpa, gpa.riskLevel ฯลฯ)
+    gpa: {
+      gpa:           latestGpa.gpa          || 0,
+      riskLevel:     latestGpa.riskLevel     || 'ปานกลาง',
+      hasObstacle:   latestGpa.hasObstacle   || false,
+      obstacleType:  latestGpa.obstacleType  || '',
+      weakSubjects:  latestGpa.weakSubjects  || '',
+      schoolSupport: latestGpa.schoolSupport || '',
+    },
+    // addr: เพิ่ม addr.addr (บ้านเลขที่) สำหรับ GAS
+    addr: {
+      ...(s.addr || {}),
+      addr: s.addr?.no || s.addr?.addr || '',
+    },
+    // addr_nat สำหรับ GAS (ส่งระดับบนสุดด้วย)
+    addr_nat: s.addr?.nat || '',
+    religion: s.addr?.rel || '',
+    behavior: s.behavior || '',
   };
 }
 
