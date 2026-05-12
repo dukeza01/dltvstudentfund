@@ -626,7 +626,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwiF2lrqx1DLRMUhpJM9NelcwEmwcodE2-Tc8pX5P_U53oaH7_lf8mFTWxRmkp9wq2xQg/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxG9K6DgBzAuedAsfCZguIIdOm9yyXeAo54_hr1dfFdQ9c1xokLdB6vwwBDB_dGzod5Yw/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1019,7 +1019,7 @@ function openStudentDetail(idx){
       <div class="form-grid">
         <div class="fg"><label>ชื่อ-สกุล</label><input value="${s.name||''}" onchange="DB.students[${idx}].name=this.value;refreshModalHeader(${idx})"></div>
         <div class="fg"><label>ชื่อเล่น</label><input value="${s.nickname||''}" onchange="DB.students[${idx}].nickname=this.value;refreshModalHeader(${idx})"></div>
-        <div class="fg"><label>เลขบัตรประชาชน</label><input value="${maskId(s.id)}" style="font-family:'Sarabun',monospace" title="คลิกเพื่อแก้ไข" onfocus="this.value=DB.students[${idx}].id||'';this.select()" onblur="DB.students[${idx}].id=this.value;this.value=maskId(this.value)" onchange="DB.students[${idx}].id=this.value"></div>
+        <div class="fg"><label>เลขบัตรประชาชน</label><input id="id-input-${idx}"value="${maskId(s.id)}"data-real-value="${s.id||''}"style="font-family:'Sarabun',monospace"title="คลิกเพื่อแก้ไข"onfocus="this.value=this.dataset.realValue;this.select()"onblur="document.getElementById('id-input-${idx}').dataset.realValue=this.value.replace(/\D/g,'');this.value=maskId(this.value)"onchange="document.getElementById('id-input-${idx}').dataset.realValue=this.value.replace(/\D/g,'')"></div>
         <div class="fg"><label>วันเดือนปีเกิด</label><input type="date" value="${s.dob||''}" onchange="DB.students[${idx}].dob=this.value"></div>
         <div class="fg"><label>อายุ (Age)</label><input readonly value="${calcAge(s.dob)}" style="background:var(--bg2);color:var(--text2);cursor:default" title="คำนวณอัตโนมัติจากวันเกิด"></div>
         <div class="fg"><label>โทรศัพท์นักเรียน</label><input value="${s.phone||''}" onchange="DB.students[${idx}].phone=this.value"></div>
@@ -1759,7 +1759,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiF2lrqx1DLRMUhpJM9NelcwEmwcodE2-Tc8pX5P_U53oaH7_lf8mFTWxRmkp9wq2xQg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG9K6DgBzAuedAsfCZguIIdOm9yyXeAo54_hr1dfFdQ9c1xokLdB6vwwBDB_dGzod5Yw/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
