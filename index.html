@@ -626,7 +626,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzJiHHe32m4K7kpt9xWQaWss_NA_7Xwex3g4PzpgAOo5bmctYqn-7YOlfsnuasXfzmHgA/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxExc8h_91G35pG6R_T2Q6iMsJn-1JBoKRjk3gSqmbBprZg0fH1vcvYdsdFY3t4yxU4Hw/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1759,7 +1759,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNfdmU4cjN_kiGmB5gltZT_UVBLtNTj1_QfOUGpAxn8o1xDbaFPPcQKPPqgpfvWJpa/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxExc8h_91G35pG6R_T2Q6iMsJn-1JBoKRjk3gSqmbBprZg0fH1vcvYdsdFY3t4yxU4Hw/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -1827,8 +1827,11 @@ function normalizeStudent(s) {
   if (!s.mentor || typeof s.mentor !== 'object') s.mentor = {};
   if (!s.mentor.firstName) s.mentor.firstName = s.mentor_firstName || '';
   if (!s.mentor.lastName)  s.mentor.lastName  = s.mentor_lastName  || '';
-  if (!s.mentor.phone)     s.mentor.phone     = s.mentor_phone     || '';
-  if (!s.mentor.position)  s.mentor.position  = s.mentor_position  || '';
+  if (!s.mentor.phone)    s.mentor.phone    = s.mentor_phone    || '';
+  if (!s.mentor.position) s.mentor.position = s.mentor_position || '';
+
+// 🟢 และ behavior
+  if (!s.hasOwnProperty('behavior')) s.behavior = s.behavior || '';
 
   // ── 4. behavior ───────────────────────────────────────────────
   if (!s.hasOwnProperty('behavior')) s.behavior = '';
@@ -1908,6 +1911,7 @@ function cleanForSheet(s) {
     mentor_lastName:  s.mentor?.lastName  || '',
     mentor_phone:     s.mentor?.phone     || '',
     mentor_position:  s.mentor?.position  || '',
+    behavior:         s.behavior || '',
     // sync gpa object จาก semGpa ล่าสุด (GAS อ่านจาก gpa.gpa, gpa.riskLevel ฯลฯ)
     gpa: {
       gpa:           latestGpa.gpa          || 0,
