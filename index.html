@@ -23,7 +23,7 @@
   --red:#DC2626;--red-lt:#FEE2E2;
   --green:#15803D;--green-lt:#DCFCE7;
   /* Sidebar */
-  --sidebar-bg:#1A1D2E;--sidebar-w:256px;
+  --sidebar-bg:linear-gradient(to bottom, #0f638a, #158674, #80c5c2);;--sidebar-w:256px;
   --sidebar-text:rgba(255,255,255,0.72);
   --sidebar-text-active:#fff;
   --sidebar-item-active:rgba(255,255,255,0.1);
@@ -229,26 +229,49 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
 /* ═══════════════════════════════════════════
    METRICS CARDS
 ═══════════════════════════════════════════ */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+/* ── KPI CARDS (minimal) ── */
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;margin-bottom:24px;
+}
 .metric{
-  background:var(--bg4);border-radius:var(--rad-lg);
-  padding:18px 20px;border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  transition:box-shadow 0.2s,transform 0.2s;
+  background:#fff;
+  border-radius:16px;
+  padding:20px 22px 18px;
+  border:1px solid rgba(15,17,35,0.06);
+  box-shadow:0 1px 2px rgba(15,17,35,0.04);
+  transition:box-shadow .2s,transform .18s;
   position:relative;overflow:hidden;cursor:default;
 }
-.metric:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.metric-lbl{font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;font-family:var(--font-body)}
-.metric-val{font-size:30px;font-weight:700;line-height:1;font-family:var(--font-heading);letter-spacing:-0.5px}
-.metric-sub{font-size:12px;color:var(--text3);margin-top:5px;font-family:var(--font-body)}
-
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.metric{background:var(--bg4);border-radius:var(--rad-lg);padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow)}
-.metric-lbl{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;font-family:var(--font-body)}
-.metric-val{font-size:28px;font-weight:700;line-height:1;font-family:var(--font-heading)}
-.metric-sub{font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--font-body)}
-.mv-blue{color:var(--blue)}.mv-teal{color:var(--teal)}.mv-amber{color:var(--amber)}.mv-red{color:var(--red)}.mv-green{color:var(--green)}
+.metric::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--metric-accent,var(--blue));border-radius:16px 16px 0 0;
+}
+.metric:hover{box-shadow:0 4px 20px rgba(15,17,35,0.1);transform:translateY(-2px)}
+.metric-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--metric-accent-lt,var(--blue-lt));
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;margin-bottom:14px;
+}
+.metric-lbl{font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;font-family:var(--font-body)}
+.metric-val{font-size:32px;font-weight:800;line-height:1;
+  font-family:var(--font-heading);letter-spacing:-1px;
+  color:var(--text);
+}
+.metric-sub{font-size:11.5px;color:var(--text3);margin-top:6px;font-family:var(--font-body)}
+.metric-trend{
+  position:absolute;top:18px;right:16px;
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:99px;
+}
+.mv-blue{--metric-accent:var(--blue);--metric-accent-lt:var(--blue-lt)}
+.mv-teal{--metric-accent:var(--teal);--metric-accent-lt:var(--teal-lt)}
+.mv-amber{--metric-accent:#B45309;--metric-accent-lt:var(--amber-lt)}
+.mv-red{--metric-accent:var(--red);--metric-accent-lt:var(--red-lt)}
+.mv-green{--metric-accent:var(--green);--metric-accent-lt:var(--green-lt)}
 
 /* TOOLBAR */
 .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -518,14 +541,40 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
 .sem-add-btn{border:2px dashed var(--border2);background:transparent;border-radius:var(--rad-lg);padding:14px;text-align:center;cursor:pointer;color:var(--text2);font-size:14px;font-family:var(--font-body);width:100%;transition:all 0.15s}
 .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
 
-/* CHARTS */
-.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px}
-.chart-card{background:var(--bg4);border-radius:var(--rad-lg);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);transition:box-shadow 0.2s}
-.chart-card:hover{box-shadow:var(--shadow-md)}
-.chart-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.6px;font-family:var(--font-heading)}
-.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:18px}
+.chart-card{
+  background:#fff;border-radius:16px;
+  border:1px solid rgba(15,17,35,0.06);
+  padding:22px 22px 18px;
+  box-shadow:0 1px 2px rgba(15,17,35,0.04);
+  transition:box-shadow .2s;
+}
+.chart-card:hover{box-shadow:0 4px 20px rgba(15,17,35,0.09)}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.chart-title{font-size:12px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:0.6px;font-family:var(--font-heading)}
+.chart-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;
+  background:var(--bg2);color:var(--text3)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
-.legend-sq{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.legend-sq{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+
+/* Watch table */
+.watch-header{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 20px;border-bottom:1px solid rgba(15,17,35,0.06);
+}
+.watch-header-icon{
+  width:32px;height:32px;border-radius:10px;
+  background:var(--red-lt);display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.watch-header-text{font-size:13px;font-weight:700;color:var(--red)}
+.watch-header-count{
+  margin-left:auto;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:99px;
+  background:var(--red-lt);color:var(--red);
+}
 
 /* GPA BAR */
 .gpa-bar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;margin-top:3px}
@@ -679,38 +728,70 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
   <div class="main">
 
 <div id="page-dashboard" class="page active">
+
+  <!-- KPI Cards -->
   <div class="metrics" id="dash-metrics"></div>
+
+  <!-- Charts row 1: GPA + Risk + Obstacles + Bank -->
   <div class="chart-grid">
     <div class="chart-card">
-      <div class="chart-title">การกระจาย GPA</div>
-      <div style="position:relative;height:200px"><canvas id="chartGPA"></canvas></div>
+      <div class="chart-header">
+        <div class="chart-title">การกระจาย GPA</div>
+        <span class="chart-badge">ล่าสุด</span>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="chartGPA"></canvas></div>
       <div class="legend" id="legend-gpa"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">ระดับความเสี่ยง</div>
-      <div style="position:relative;height:200px"><canvas id="chartRisk"></canvas></div>
+      <div class="chart-header">
+        <div class="chart-title">ระดับความเสี่ยง</div>
+        <span class="chart-badge">ทั้งหมด</span>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="chartRisk"></canvas></div>
       <div class="legend" id="legend-risk"></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">อุปสรรคที่พบ</div>
-      <div style="position:relative;height:200px"><canvas id="chartObstacle"></canvas></div>
+      <div class="chart-header">
+        <div class="chart-title">อุปสรรคที่พบ</div>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="chartObstacle"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">ธนาคาร Top 5</div>
-      <div style="position:relative;height:200px"><canvas id="chartBank"></canvas></div>
+      <div class="chart-header">
+        <div class="chart-title">ธนาคาร Top 5</div>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="chartBank"></canvas></div>
     </div>
   </div>
+
+  <!-- GPA Bar full width -->
   <div class="chart-grid" style="grid-template-columns:1fr">
     <div class="chart-card">
-      <div class="chart-title">GPA นักเรียนทุกคน (เรียงน้อยไปมาก)</div>
-      <div style="position:relative;height:260px"><canvas id="chartGPABar"></canvas></div>
+      <div class="chart-header">
+        <div class="chart-title">GPA นักเรียนทุกคน — เรียงจากต่ำไปสูง</div>
+        <span class="chart-badge" id="gpa-bar-count"></span>
+      </div>
+      <div style="position:relative;height:240px"><canvas id="chartGPABar"></canvas></div>
     </div>
   </div>
-  <div class="tbl-wrap" style="margin-top:6px">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--red)">⚠️ นักเรียนที่ต้องติดตาม (GPA < 3.00 หรือ ความเสี่ยงสูง)</div>
-    <table><thead><tr><th>#</th><th>รูป</th><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>จังหวัด</th><th>GPA</th><th>ความเสี่ยง</th><th>อุปสรรค</th></tr></thead>
-    <tbody id="watch-tbody"></tbody></table>
+
+  <!-- Watch list -->
+  <div class="chart-card" style="margin-bottom:24px;padding:0;overflow:hidden">
+    <div class="watch-header">
+      <div class="watch-header-icon">⚠️</div>
+      <div class="watch-header-text">นักเรียนที่ต้องติดตาม</div>
+      <div class="watch-header-count" id="watch-count"></div>
+    </div>
+    <div class="tbl-wrap" style="border:none;box-shadow:none;border-radius:0">
+      <table><thead><tr>
+        <th>#</th><th>รูป</th><th>ชื่อ-สกุล</th>
+        <th>โรงเรียน</th><th>จังหวัด</th>
+        <th>GPA</th><th>ความเสี่ยง</th><th>อุปสรรค</th>
+      </tr></thead>
+      <tbody id="watch-tbody"></tbody></table>
+    </div>
   </div>
+
 </div>
 
 <div id="page-students" class="page">
@@ -1049,9 +1130,9 @@ function showMapNotice(msg, color){
 
 function gpaColor(g){
   if(!g||g===0) return '#aaa';
-  if(g>=3.5) return '#3A6A10';
-  if(g>=3.0) return '#1A5FA8';
-  if(g>=2.5) return '#7D4A08';
+  if(g>=3.5) return '#A2CB8B';
+  if(g>=3.0) return '#FFD786';
+  if(g>=2.5) return '#DC143C';
   return '#9E2B2B';
 }
 function riskBadge(r){
@@ -1163,13 +1244,44 @@ function renderDashboard(){
   const terms=new Set();
   DB.students.forEach(s=>s.semGpa&&s.semGpa.forEach(g=>terms.add(g.term)));
 
+  const riskPct = total>0?Math.round(highRisk/total*100):0;
   document.getElementById('dash-metrics').innerHTML=`
-    <div class="metric"><div class="metric-lbl">นักเรียนทุน</div><div class="metric-val mv-blue">${total}</div><div class="metric-sub">คน</div></div>
-    <div class="metric"><div class="metric-lbl">GPA เฉลี่ย</div><div class="metric-val mv-teal">${avgGpa}</div><div class="metric-sub">ล่าสุด</div></div>
-    <div class="metric"><div class="metric-lbl">เบิกจ่ายรวม</div><div class="metric-val mv-amber" style="font-size:18px">${fmt(totalPay)}</div><div class="metric-sub">บาท</div></div>
-    <div class="metric"><div class="metric-lbl">ความเสี่ยงสูง</div><div class="metric-val mv-red">${highRisk}</div><div class="metric-sub">คน</div></div>
-    <div class="metric"><div class="metric-lbl">มีอุปสรรค</div><div class="metric-val mv-red">${withObs}</div><div class="metric-sub">คน</div></div>
-    <div class="metric"><div class="metric-lbl">ภาคเรียนที่บันทึก</div><div class="metric-val mv-blue">${terms.size}</div><div class="metric-sub">ภาคเรียน</div></div>
+    <div class="metric mv-blue">
+      <div class="metric-icon">🎓</div>
+      <div class="metric-lbl">นักเรียนทุน</div>
+      <div class="metric-val">${total}</div>
+      <div class="metric-sub">คน ในระบบ</div>
+    </div>
+    <div class="metric mv-teal">
+      <div class="metric-icon">📊</div>
+      <div class="metric-lbl">GPA เฉลี่ย</div>
+      <div class="metric-val">${avgGpa}</div>
+      <div class="metric-sub">ข้อมูลล่าสุด</div>
+    </div>
+    <div class="metric mv-amber">
+      <div class="metric-icon">💰</div>
+      <div class="metric-lbl">เบิกจ่ายรวม</div>
+      <div class="metric-val" style="font-size:22px;letter-spacing:-0.5px">${fmt(totalPay)}</div>
+      <div class="metric-sub">บาท</div>
+    </div>
+    <div class="metric mv-red">
+      <div class="metric-icon">🔴</div>
+      <div class="metric-lbl">ความเสี่ยงสูง</div>
+      <div class="metric-val">${highRisk}</div>
+      <div class="metric-sub">${riskPct}% ของนักเรียนทั้งหมด</div>
+    </div>
+    <div class="metric mv-red">
+      <div class="metric-icon">🚧</div>
+      <div class="metric-lbl">มีอุปสรรค</div>
+      <div class="metric-val">${withObs}</div>
+      <div class="metric-sub">คน รายงานอุปสรรค</div>
+    </div>
+    <div class="metric mv-green">
+      <div class="metric-icon">📅</div>
+      <div class="metric-lbl">ภาคเรียน</div>
+      <div class="metric-val">${terms.size}</div>
+      <div class="metric-sub">ภาคเรียนที่บันทึก</div>
+    </div>
   `;
 
   // GPA distribution
@@ -1183,7 +1295,7 @@ function renderDashboard(){
   destroyChart('chartGPA');
   charts['chartGPA']=new Chart(document.getElementById('chartGPA'),{
     type:'doughnut',
-    data:{labels:Object.keys(gBuckets),datasets:[{data:Object.values(gBuckets),backgroundColor:['#9E2B2B','#D85A30','#1A5FA8','#3A6A10'],borderWidth:0}]},
+    data:{labels:Object.keys(gBuckets),datasets:[{data:Object.values(gBuckets),backgroundColor:['#EE4E4E','#E9C46A','#ADD899','#41B06E'],borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
   });
   document.getElementById('legend-gpa').innerHTML=Object.entries(gBuckets).map(([k,v],i)=>`<span class="legend-item"><span class="legend-sq" style="background:${['#9E2B2B','#D85A30','#1A5FA8','#3A6A10'][i]}"></span>${k}: ${v}</span>`).join('');
@@ -1191,7 +1303,7 @@ function renderDashboard(){
   // Risk
   const riskCount={};
   DB.students.forEach(s=>{const r=getLatestGpa(s).riskLevel||'-';riskCount[r]=(riskCount[r]||0)+1;});
-  const rColors={'สูงมาก':'#9E2B2B','สูง':'#D85A30','ปานกลาง':'#C47F00','ต่ำ':'#0D6B52','-':'#888'};
+  const rColors={'สูงมาก':'#DC143C','สูง':'#FFB4B4','ปานกลาง':'#F7AD45','ต่ำ':'#41A67E','-':'#888'};
   destroyChart('chartRisk');
   charts['chartRisk']=new Chart(document.getElementById('chartRisk'),{
     type:'doughnut',
@@ -1208,8 +1320,8 @@ function renderDashboard(){
   destroyChart('chartObstacle');
   charts['chartObstacle']=new Chart(document.getElementById('chartObstacle'),{
     type:'bar',
-    data:{labels:Object.keys(obsTypes),datasets:[{data:Object.values(obsTypes),backgroundColor:'#B5D4F4',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.05)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+    data:{labels:Object.keys(obsTypes),datasets:[{data:Object.values(obsTypes),backgroundColor:'rgba(37,99,235,0.6)',borderColor:'rgba(37,99,235,0.5)',borderWidth:1,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(15,17,35,0.04)'},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10},color:'#5A6178'}}}}
   });
 
   // Bank
@@ -1219,8 +1331,8 @@ function renderDashboard(){
   destroyChart('chartBank');
   charts['chartBank']=new Chart(document.getElementById('chartBank'),{
     type:'bar',
-    data:{labels:bankTop.map(x=>x[0]),datasets:[{data:bankTop.map(x=>x[1]),backgroundColor:['#1A5FA8','#0D6B52','#7D4A08','#9E2B2B','#533B89'],borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+    data:{labels:bankTop.map(x=>x[0]),datasets:[{data:bankTop.map(x=>x[1]),backgroundColor:['#F75270','#5EABD6','#7E1891','#41B3A2','#E9C46A'],borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(15,17,35,0.04)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10},color:'#5A6178'}}}}
   });
 
   // GPA bar
@@ -1229,11 +1341,15 @@ function renderDashboard(){
   charts['chartGPABar']=new Chart(document.getElementById('chartGPABar'),{
     type:'bar',
     data:{labels:gpaStudents.map(s=>s.nickname||s.name.substring(0,6)),datasets:[{data:gpaStudents.map(s=>getLatestGpa(s).gpa),backgroundColor:gpaStudents.map(s=>gpaColor(getLatestGpa(s).gpa)),borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`GPA: ${ctx.parsed.y}`}}},scales:{y:{min:2,max:4,grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:false}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`GPA: ${ctx.parsed.y}`}}},scales:{y:{min:2,max:4,grid:{color:'rgba(15,17,35,0.04)'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,autoSkip:true,color:'#9BA3BC'}}}}
   });
 
   // Watch list
   const watchList=DB.students.filter(s=>{const g=getLatestGpa(s);return (g.gpa>0&&g.gpa<3.0)||g.riskLevel==='สูงมาก'||g.riskLevel==='สูง';}).sort((a,b)=>(getLatestGpa(a).gpa||0)-(getLatestGpa(b).gpa||0));
+  const wc=document.getElementById('watch-count');
+  if(wc) wc.textContent=watchList.length+' คน';
+  const gb=document.getElementById('gpa-bar-count');
+  if(gb) gb.textContent=gpaStudents.length+' คน';
   document.getElementById('watch-tbody').innerHTML=watchList.map(s=>{const g=getLatestGpa(s);return`<tr>
     <td>${s.no}</td>
     <td style="width:46px">${photoEl(s)}</td>
