@@ -1158,7 +1158,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwT8kooT7s5k02Xoz2fM3883thq_yp3HbIKr-upMubBdhPVLSVYD9vtqUSlIeA-WhqEJw/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyRTrc6sda3ZIJsamvu26IregkL4cInJQ33xtB0eHa2e9aq40LPX_i8gQJIskCXL4tSQQ/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -2685,7 +2685,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwT8kooT7s5k02Xoz2fM3883thq_yp3HbIKr-upMubBdhPVLSVYD9vtqUSlIeA-WhqEJw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRTrc6sda3ZIJsamvu26IregkL4cInJQ33xtB0eHa2e9aq40LPX_i8gQJIskCXL4tSQQ/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2995,16 +2995,25 @@ async function saveStudentToSheet(idx) {
   _isSaving = true;
   setSyncDot('syncing');
   try {
-    const result = await gasPost({ action: 'upsert', student: cleanForSheet(s) });
-    if (result.lastUpdated) lastKnownUpdate = result.lastUpdated; // อัปเดต timestamp ทันที
+    const cleaned = cleanForSheet(s);
+    // 1) upsert students + payment sheet
+    const result = await gasPost({ action: 'upsert', student: cleaned });
+    if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
+    // 2) upsert GPA sheet แยก (ส่ง semGpa ตรงๆ ไม่ผ่าน cleanForSheet)
+    if (s.semGpa && s.semGpa.length > 0) {
+      await gasPost({ action: 'upsertGpa', student: {
+        id: s.id, no: s.no, name: s.name,
+        school_m1: s.school_m1 || '',
+        semGpa: s.semGpa
+      }});
+    }
     isConnected = true; _retryCount = 0;
     setSyncDot('online');
     showStatus('☁️ บันทึก ' + (s.name||'นักเรียนใหม่') + ' ไปยัง Sheet แล้ว', 'success');
-    if (!_pollTimer) startPolling(); // restart polling ถ้าหยุดไป
+    if (!_pollTimer) startPolling();
   } catch (err) {
     setSyncDot('offline');
     showStatus('⚠️ Sheet ไม่ตอบสนอง (บันทึก local ไว้แล้ว) — จะ retry อัตโนมัติ', 'error');
-    // queue retry
     setTimeout(() => saveStudentToSheet(idx), 10000);
   } finally {
     _isSaving = false;
@@ -3036,9 +3045,17 @@ async function saveAllToSheet() {
 }
 
 // ─── ลบออกจาก Sheet ───────────────────────────────────────
-async function deleteStudentFromSheet(studentId) {
+async function deleteStudentFromSheet(studentId, studentData) {
   if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   try {
+    // 1) ล้าง GPA rows ของนักเรียนคนนี้ก่อน (ส่ง semGpa=[])
+    if (studentData) {
+      await gasPost({ action: 'upsertGpa', student: {
+        id: studentId, no: studentData.no || '', name: studentData.name || '',
+        school_m1: studentData.school_m1 || '', semGpa: []
+      }});
+    }
+    // 2) ลบจาก students + payment sheet
     const result = await gasPost({ action: 'delete', id: studentId });
     if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
   } catch(e) { console.warn('deleteStudentFromSheet:', e.message); }
@@ -3108,13 +3125,13 @@ function saveAndRefresh() {
 // Override deleteStudent to also delete from Sheet
 function deleteStudent(idx) {
   if (!confirm('ยืนยันการลบ "' + DB.students[idx].name + '" ?')) return;
-  const sid = DB.students[idx].id;
+  const sid  = DB.students[idx].id;
+  const sdat = { no: DB.students[idx].no, name: DB.students[idx].name, school_m1: DB.students[idx].school_m1 };
   DB.students.splice(idx, 1);
-  // Re-number after deletion
   DB.students.forEach((s, i) => { s.no = i + 1; });
   saveToStorage();
   renderStudents(); renderDashboard(); populateFilters();
-  deleteStudentFromSheet(sid);
+  deleteStudentFromSheet(sid, sdat);
   showStatus('✅ ลบข้อมูลสำเร็จ', 'success');
 }
 
