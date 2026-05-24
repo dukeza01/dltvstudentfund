@@ -1158,7 +1158,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyRTrc6sda3ZIJsamvu26IregkL4cInJQ33xtB0eHa2e9aq40LPX_i8gQJIskCXL4tSQQ/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx3LSWvTSgUnqgvkekVoF_zK5pjMLYIfLuBy9HTZXYADohKELqJVQ5aJbYHd8wTWuEjoQ/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -2685,7 +2685,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRTrc6sda3ZIJsamvu26IregkL4cInJQ33xtB0eHa2e9aq40LPX_i8gQJIskCXL4tSQQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3LSWvTSgUnqgvkekVoF_zK5pjMLYIfLuBy9HTZXYADohKELqJVQ5aJbYHd8wTWuEjoQ/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2763,14 +2763,19 @@ function normalizeStudent(s) {
   if (!s.hasOwnProperty('behavior')) s.behavior = '';
 
   // ── 5. semPayments ─────────────────────────────────────────────
-  const pp = parseJsonField(s.semPayments);
-  if (pp && pp.length > 0) {
-    s.semPayments = pp.map(p => ({
+  const rawPay = Array.isArray(s.semPayments) ? s.semPayments : parseJsonField(s.semPayments);
+  if (rawPay && rawPay.length > 0) {
+    s.semPayments = rawPay.map(p => ({
       term: p.term || '', p1: Number(p.p1)||0, p2: Number(p.p2)||0,
       item1: p.item1||'ค่าเงินบำรุงการศึกษา', item2: p.item2||'ค่าใช้จ่ายในการเรียน'
     }));
-  } else if (!Array.isArray(s.semPayments)) {
+  } else {
     s.semPayments = [];
+  }
+  // sync s.payment จาก semPayments ล่าสุด
+  if (s.semPayments.length > 0) {
+    const lp = s.semPayments[s.semPayments.length - 1];
+    s.payment = { term: lp.term, p1: lp.p1, p2: lp.p2, item1: lp.item1, item2: lp.item2 };
   }
 
   // ── 6. semGpa ─────────────────────────────────────────────────
@@ -2838,6 +2843,14 @@ function cleanForSheet(s) {
     mentor_phone:     s.mentor?.phone     || '',
     mentor_position:  s.mentor?.position  || '',
     behavior:         s.behavior || '',
+    // ส่ง semPayments array เพื่อให้ GAS เขียนทุก term ลง Payment Sheet
+    semPayments: (s.semPayments || []).map(p => ({
+      term:  p.term  || '',
+      p1:    p.p1    || 0,
+      p2:    p.p2    || 0,
+      item1: p.item1 || 'ค่าเงินบำรุงการศึกษา',
+      item2: p.item2 || 'ค่าใช้จ่ายในการเรียน',
+    })),
     // sync gpa object จาก semGpa ล่าสุด (GAS อ่านจาก gpa.gpa, gpa.riskLevel ฯลฯ)
     gpa: {
       gpa:           latestGpa.gpa          || 0,
@@ -2937,8 +2950,25 @@ async function pollTick() {
       changed.forEach(incoming => {
         const norm = normalizeStudent(incoming);
         const idx  = DB.students.findIndex(s => String(s.id) === String(norm.id));
-        if (idx >= 0) { DB.students[idx] = { ...DB.students[idx], ...norm }; updateCount++; }
-        else          { DB.students.push(norm); addCount++; }
+        if (idx >= 0) {
+          // merge แต่ให้ semPayments และ semGpa จาก server override เสมอ (ไม่เอา local)
+          DB.students[idx] = {
+            ...DB.students[idx],
+            ...norm,
+            semPayments: (norm.semPayments && norm.semPayments.length > 0)
+              ? norm.semPayments
+              : DB.students[idx].semPayments,
+            semGpa: (norm.semGpa && norm.semGpa.length > 0)
+              ? norm.semGpa
+              : DB.students[idx].semGpa,
+            // รักษา photoUrl local ไว้ถ้า server ไม่มี
+            photoUrl: norm.photoUrl || DB.students[idx].photoUrl,
+          };
+          updateCount++;
+        } else {
+          DB.students.push(norm);
+          addCount++;
+        }
       });
       DB.students.forEach((s, i) => { s.no = i + 1; });
       lastKnownUpdate = json2.lastUpdated || serverUpdate;
