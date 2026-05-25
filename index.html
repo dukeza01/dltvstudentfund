@@ -1158,7 +1158,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx3LSWvTSgUnqgvkekVoF_zK5pjMLYIfLuBy9HTZXYADohKELqJVQ5aJbYHd8wTWuEjoQ/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwasWp6PdCtRO5vzUCV47dsYCJ1dj3JO7bw0Y7R2pLHB1qjjjdI21eUo4aoipFfY9lVog/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -2685,7 +2685,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3LSWvTSgUnqgvkekVoF_zK5pjMLYIfLuBy9HTZXYADohKELqJVQ5aJbYHd8wTWuEjoQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwasWp6PdCtRO5vzUCV47dsYCJ1dj3JO7bw0Y7R2pLHB1qjjjdI21eUo4aoipFfY9lVog/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2819,39 +2819,66 @@ function normalizeStudent(s) {
 }
 
 function cleanForSheet(s) {
-  // แปลง JS object กลับเป็นโครงสร้างที่ GAS (buildStdRow) เข้าใจ
-  // GAS อ่านฟิลด์: district, Amphoe, lat., long., directorM_1, Tel.directorM_1, AdvisorM_1, TelAdvisorM_1
-  // GAS อ่าน mentor: mentor_firstName, mentor_lastName (ระดับบน)
-  const sa = s.school_m1_addr || {};
-  const latestGpa = (s.semGpa && s.semGpa.length > 0) ? s.semGpa[s.semGpa.length - 1] : (s.gpa || {});
+  // สร้าง object ใหม่อย่างชัดเจน (ไม่ใช้ ...spread) เพื่อป้องกันฟิลด์หาย/ทับ
+  const sa   = s.school_m1_addr || {};
+  const addr = s.addr || {};
+  const bank = s.bank || {};
+  const latestGpa = (s.semGpa && s.semGpa.length > 0)
+    ? s.semGpa[s.semGpa.length - 1]
+    : (s.gpa || {});
+
   return {
-    ...s,
-    // รูปภาพ: ไม่ส่ง base64 ไป Sheet
-    photoUrl: (s.photoUrl && s.photoUrl.startsWith('data:')) ? '' : (s.photoUrl||''),
-    // map school_m1_addr กลับเป็น top-level fields ที่ GAS รู้จัก
-    district:        sa.district        || '',
-    Amphoe:          sa.amphoe          || '',
-    lat:             sa.lat             || '',
-    lng:             sa.lng             || '',
-    directorM_1:     sa.directorM1      || '',
-    Tel_directorM_1: sa.telDirectorM1   || '',
-    AdvisorM_1:      sa.advisorM1       || '',
-    TelAdvisorM_1:   sa.telAdvisorM1    || '',
-    // map mentor กลับเป็น top-level fields ที่ GAS รู้จัก
-    mentor_firstName: s.mentor?.firstName || '',
-    mentor_lastName:  s.mentor?.lastName  || '',
-    mentor_phone:     s.mentor?.phone     || '',
-    mentor_position:  s.mentor?.position  || '',
-    behavior:         s.behavior || '',
-    // ส่ง semPayments array เพื่อให้ GAS เขียนทุก term ลง Payment Sheet
-    semPayments: (s.semPayments || []).map(p => ({
-      term:  p.term  || '',
-      p1:    p.p1    || 0,
-      p2:    p.p2    || 0,
-      item1: p.item1 || 'ค่าเงินบำรุงการศึกษา',
-      item2: p.item2 || 'ค่าใช้จ่ายในการเรียน',
-    })),
-    // sync gpa object จาก semGpa ล่าสุด (GAS อ่านจาก gpa.gpa, gpa.riskLevel ฯลฯ)
+    // ─── ข้อมูลพื้นฐาน ───────────────────────────────────
+    no:           s.no          || '',
+    id:           s.id          || '',
+    name:         s.name        || '',
+    nickname:     s.nickname    || '',
+    dob:          s.dob         || '',
+    phone:        s.phone       || '',
+    parent:       s.parent      || '',
+    parentPhone:  s.parentPhone || '',
+    gpa_p6:       s.gpa_p6      || '',
+    school_p6:    s.school_p6   || '',
+    school_m1:    s.school_m1   || '',
+    province:     s.province    || '',
+    org:          s.org         || '',
+    // รูปภาพ: ไม่ส่ง base64
+    photoUrl: (s.photoUrl || '').startsWith('data:') ? '' : (s.photoUrl || ''),
+
+    // ─── ที่อยู่โรงเรียน (ชื่อ field ตรงกับ GAS header) ──
+    district:         sa.district      || '',
+    Amphoe:           sa.amphoe        || '',
+    'lat.':           sa.lat           || '',
+    'long.':          sa.lng           || '',
+    directorM_1:      sa.directorM1    || '',
+    'Tel.directorM_1':sa.telDirectorM1 || '',
+    AdvisorM_1:       sa.advisorM1     || '',
+    TelAdvisorM_1:    sa.telAdvisorM1  || '',
+
+    // ─── ที่อยู่บ้าน ───────────────────────────────────────
+    addr:          addr.addr    || addr.no || '',
+    addr_moo:      addr.moo     || '',
+    addr_village:  addr.village || '',
+    addr_tambon:   addr.tambon  || '',
+    addr_amphoe:   addr.amphoe  || '',
+    addr_province: addr.province|| '',
+    addr_zip:      addr.zip     || '',
+    addr_nat:      addr.nat     || '',
+    religion:      addr.rel     || s.religion || '',
+
+    // ─── ธนาคาร ───────────────────────────────────────────
+    bank_contract:     bank.contract     || '',
+    bank_contractDate: bank.contractDate || '',
+    bank_bankSt:       bank.bankSt       || '',
+    bank_branchSt:     bank.branchSt     || '',
+    bank_accNoSt:      bank.accNoSt      || '',
+    bank_accNameSt:    bank.accNameSt    || '',
+    bank_bankSch:      bank.bankSch      || '',
+    bank_branchSch:    bank.branchSch    || '',
+    bank_accNoSch:     bank.accNoSch     || '',
+    bank_accNameSch:   bank.accNameSch   || '',
+
+    // ─── GPA ──────────────────────────────────────────────
     gpa: {
       gpa:           latestGpa.gpa          || 0,
       riskLevel:     latestGpa.riskLevel     || 'ปานกลาง',
@@ -2860,15 +2887,22 @@ function cleanForSheet(s) {
       weakSubjects:  latestGpa.weakSubjects  || '',
       schoolSupport: latestGpa.schoolSupport || '',
     },
-    // addr: เพิ่ม addr.addr (บ้านเลขที่) สำหรับ GAS
-    addr: {
-      ...(s.addr || {}),
-      addr: s.addr?.no || s.addr?.addr || '',
-    },
-    // addr_nat สำหรับ GAS (ส่งระดับบนสุดด้วย)
-    addr_nat: s.addr?.nat || '',
-    religion: s.addr?.rel || '',
+
+    // ─── พี่เลี้ยง / behavior ──────────────────────────────
+    mentor_firstName: (s.mentor && s.mentor.firstName) || s.mentor_firstName || '',
+    mentor_lastName:  (s.mentor && s.mentor.lastName)  || s.mentor_lastName  || '',
+    mentor_phone:     (s.mentor && s.mentor.phone)     || s.mentor_phone     || '',
+    mentor_position:  (s.mentor && s.mentor.position)  || s.mentor_position  || '',
     behavior: s.behavior || '',
+
+    // ─── semPayments array (GAS อ่านเพื่อ upsertPayment) ──
+    semPayments: (s.semPayments || []).map(p => ({
+      term:  p.term  || '',
+      p1:    Number(p.p1)  || 0,
+      p2:    Number(p.p2)  || 0,
+      item1: p.item1 || 'ค่าเงินบำรุงการศึกษา',
+      item2: p.item2 || 'ค่าใช้จ่ายในการเรียน',
+    })),
   };
 }
 
@@ -3141,7 +3175,15 @@ function showLoading(show, msg = '') {
 
 // ─── บันทึก + ปิด modal (optimistic UI) ──────────────────
 function saveAndRefresh() {
-  DB.students.forEach((s, i) => { s.no = i + 1; });
+  DB.students.forEach((s, i) => {
+    s.no = i + 1;
+    // sync s.payment จาก semPayments ล่าสุดเสมอ ก่อน render
+    if (s.semPayments && s.semPayments.length > 0) {
+      const lp = s.semPayments[s.semPayments.length - 1];
+      s.payment = { term: lp.term, p1: lp.p1||0, p2: lp.p2||0,
+                    item1: lp.item1||'ค่าเงินบำรุงการศึกษา', item2: lp.item2||'ค่าใช้จ่ายในการเรียน' };
+    }
+  });
   saveToStorage();
   const savedIdx = editingIndex;
   closeModal('student-modal');
