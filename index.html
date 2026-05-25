@@ -1158,7 +1158,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwasWp6PdCtRO5vzUCV47dsYCJ1dj3JO7bw0Y7R2pLHB1qjjjdI21eUo4aoipFfY9lVog/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzWR65QVr1ILP2zRRkavlSms0jfum5ynWz9VBANdhoXJKEMbHWtfHFiT1wD9BAo20JjTQ/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -2685,7 +2685,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwasWp6PdCtRO5vzUCV47dsYCJ1dj3JO7bw0Y7R2pLHB1qjjjdI21eUo4aoipFfY9lVog/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWR65QVr1ILP2zRRkavlSms0jfum5ynWz9VBANdhoXJKEMbHWtfHFiT1wD9BAo20JjTQ/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2966,7 +2966,9 @@ async function pollTick() {
     const serverUpdate = json.lastUpdated;
 
     // ถ้า timestamp ไม่เปลี่ยน → ไม่ต้องทำอะไร
-    if (serverUpdate && serverUpdate === lastKnownUpdate) {
+    // ป้องกัน skip เมื่อ lastKnownUpdate เป็นค่าว่างหรือ epoch
+    const isUnknown = !lastKnownUpdate || lastKnownUpdate === new Date(0).toISOString();
+    if (!isUnknown && serverUpdate && serverUpdate === lastKnownUpdate) {
       setSyncDot('online');
       return;
     }
@@ -3065,11 +3067,12 @@ async function saveStudentToSheet(idx) {
     if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
     // 2) upsert GPA sheet แยก (ส่ง semGpa ตรงๆ ไม่ผ่าน cleanForSheet)
     if (s.semGpa && s.semGpa.length > 0) {
-      await gasPost({ action: 'upsertGpa', student: {
+      const gpaResult = await gasPost({ action: 'upsertGpa', student: {
         id: s.id, no: s.no, name: s.name,
         school_m1: s.school_m1 || '',
         semGpa: s.semGpa
       }});
+      if (gpaResult.lastUpdated) lastKnownUpdate = gpaResult.lastUpdated;
     }
     isConnected = true; _retryCount = 0;
     setSyncDot('online');
