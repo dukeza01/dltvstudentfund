@@ -1816,12 +1816,12 @@ function renderPaymentPanel(idx){
         </div>
         <!-- แบบฟอร์มแก้ไข -->
         <div class="form-grid" style="padding:14px">
-          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value"></div>
-          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
-          <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value"></div>
-          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx})"></div>
-          <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value"></div>
-          <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียน ${p.term||''} นี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx})}">🗑 ลบภาคเรียน</button></div>
+          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียน ${p.term||''} นี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})}">🗑 ลบภาคเรียน</button></div>
         </div>
         <div style="padding:0 14px 14px;font-size:13px;color:var(--text2)">
           รวมภาคเรียนนี้: <strong style="color:var(--teal);font-size:15px">${fmt(total)} บาท</strong>
@@ -1849,23 +1849,23 @@ function renderGpaPanel(idx){
       </div>
       <div class="sem-record-body">
         <div class="form-grid" style="padding:14px">
-          <div class="fg"><label>ภาคเรียน</label><input value="${g.term||''}" onchange="DB.students[${idx}].semGpa[${gi}].term=this.value"></div>
-          <div class="fg"><label>GPA</label><input type="number" step="0.01" min="0" max="4" value="${g.gpa||''}" onchange="DB.students[${idx}].semGpa[${gi}].gpa=parseFloat(this.value)||0;renderGpaPanel(${idx})"></div>
+          <div class="fg"><label>ภาคเรียน</label><input value="${g.term||''}" onchange="DB.students[${idx}].semGpa[${gi}].term=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>GPA</label><input type="number" step="0.01" min="0" max="4" value="${g.gpa||''}" onchange="DB.students[${idx}].semGpa[${gi}].gpa=parseFloat(this.value)||0;renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
           <div class="fg"><label>ระดับความเสี่ยง</label>
-            <select onchange="DB.students[${idx}].semGpa[${gi}].riskLevel=this.value;renderGpaPanel(${idx})">
+            <select onchange="DB.students[${idx}].semGpa[${gi}].riskLevel=this.value;renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})">
               ${['สูงมาก','สูง','ปานกลาง','ต่ำ'].map(v=>`<option ${g.riskLevel===v?'selected':''}>${v}</option>`).join('')}
             </select>
           </div>
           <div class="fg"><label>มีอุปสรรค</label>
-            <select onchange="DB.students[${idx}].semGpa[${gi}].hasObstacle=this.value==='true'">
+            <select onchange="DB.students[${idx}].semGpa[${gi}].hasObstacle=this.value==='true';saveToStorage();saveStudentToSheet(${idx})">
               <option value="true" ${g.hasObstacle?'selected':''}>มี</option>
               <option value="false" ${!g.hasObstacle?'selected':''}>ไม่มี</option>
             </select>
           </div>
-          <div class="fg"><label>ประเภทอุปสรรค</label><input value="${g.obstacleType||''}" onchange="DB.students[${idx}].semGpa[${gi}].obstacleType=this.value"></div>
-          <div class="fg"><label>วิชาที่อ่อน</label><input value="${g.weakSubjects||''}" onchange="DB.students[${idx}].semGpa[${gi}].weakSubjects=this.value"></div>
-          <div class="fg fg-full"><label>การช่วยเหลือของโรงเรียน</label><input value="${g.schoolSupport||''}" onchange="DB.students[${idx}].semGpa[${gi}].schoolSupport=this.value"></div>
-          <div class="fg"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียนนี้?')){DB.students[${idx}].semGpa.splice(${gi},1);renderGpaPanel(${idx})}">🗑 ลบ</button></div>
+          <div class="fg"><label>ประเภทอุปสรรค</label><input value="${g.obstacleType||''}" onchange="DB.students[${idx}].semGpa[${gi}].obstacleType=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>วิชาที่อ่อน</label><input value="${g.weakSubjects||''}" onchange="DB.students[${idx}].semGpa[${gi}].weakSubjects=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg fg-full"><label>การช่วยเหลือของโรงเรียน</label><input value="${g.schoolSupport||''}" onchange="DB.students[${idx}].semGpa[${gi}].schoolSupport=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียนนี้?')){DB.students[${idx}].semGpa.splice(${gi},1);renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})}">🗑 ลบ</button></div>
         </div>
       </div>
     </div>`;
@@ -1883,12 +1883,16 @@ function addSemPayment(idx){
   if(!DB.students[idx].semPayments) DB.students[idx].semPayments=[];
   DB.students[idx].semPayments.push({term:'',p1:0,p2:0,item1:'ค่าเงินบำรุงการศึกษา',item2:'ค่าใช้จ่ายในการเรียน'});
   renderPaymentPanel(idx);
+  saveToStorage();
+  saveStudentToSheet(idx);
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-4 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 function addSemGpa(idx){
   if(!DB.students[idx].semGpa) DB.students[idx].semGpa=[];
   DB.students[idx].semGpa.push({term:'',gpa:0,riskLevel:'ปานกลาง',hasObstacle:false,obstacleType:'',weakSubjects:'',schoolSupport:''});
   renderGpaPanel(idx);
+  saveToStorage();
+  saveStudentToSheet(idx);
   setTimeout(()=>{const recs=document.querySelectorAll('#st-panel-5 .sem-record-body');if(recs.length)recs[recs.length-1].classList.add('open');},50);
 }
 
@@ -2548,7 +2552,7 @@ function switchPhotoSource(type, btn, idx) {
 // ============ LOCAL STORAGE PERSISTENCE ============
 const STORAGE_KEY = 'dltv_student_photos';
 const STORAGE_KEY_DATA = 'dltv_students_data';
-const DATA_VERSION = '2568v6_addr_no'; // v4: Payment แยก Sheet
+const DATA_VERSION = '2568v7_semgpa_sync'; // v7: ส่ง semGpa ครบทุก record ข้ามเครื่อง
 // ล้าง cache เก่าถ้า version ไม่ตรง (ล้างทั้งหมดเพื่อให้โหลดข้อมูลใหม่จาก RAW)
 if (localStorage.getItem('dltv_data_version') !== DATA_VERSION) {
   localStorage.removeItem(STORAGE_KEY_DATA);
@@ -2903,6 +2907,17 @@ function cleanForSheet(s) {
       item1: p.item1 || 'ค่าเงินบำรุงการศึกษา',
       item2: p.item2 || 'ค่าใช้จ่ายในการเรียน',
     })),
+
+    // ─── semGpa array (ส่งทุก record เพื่อ sync ข้ามเครื่อง) ──
+    semGpa: (s.semGpa || []).map(g => ({
+      term:          g.term          || '',
+      gpa:           Number(g.gpa)   || 0,
+      riskLevel:     g.riskLevel     || 'ปานกลาง',
+      hasObstacle:   g.hasObstacle   || false,
+      obstacleType:  g.obstacleType  || '',
+      weakSubjects:  g.weakSubjects  || '',
+      schoolSupport: g.schoolSupport || '',
+    })),
   };
 }
 
@@ -2996,7 +3011,9 @@ async function pollTick() {
               : DB.students[idx].semPayments,
             semGpa: (norm.semGpa && norm.semGpa.length > 0)
               ? norm.semGpa
-              : DB.students[idx].semGpa,
+              : (DB.students[idx].semGpa && DB.students[idx].semGpa.length > 0)
+                ? DB.students[idx].semGpa   // รักษา local ถ้า server ยังไม่มี
+                : norm.semGpa,
             // รักษา photoUrl local ไว้ถ้า server ไม่มี
             photoUrl: norm.photoUrl || DB.students[idx].photoUrl,
           };
