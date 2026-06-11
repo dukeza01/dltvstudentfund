@@ -1165,7 +1165,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzWR65QVr1ILP2zRRkavlSms0jfum5ynWz9VBANdhoXJKEMbHWtfHFiT1wD9BAo20JjTQ/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx9xK1wDtK1Hkpt4hEqTNC32TrZr4NrPQ4ftx__U-JWQs1eYN4cF7cwcdXyFV1P8ha6ng/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1823,11 +1823,11 @@ function renderPaymentPanel(idx){
         </div>
         <!-- แบบฟอร์มแก้ไข -->
         <div class="form-grid" style="padding:14px">
-          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value;saveToStorage();saveStudentToSheet(${idx});renderDashboard();populateTermFilter()"></div>
-          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx});renderDashboard()"></div>
-          <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx});renderDashboard()"></div>
-          <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value;renderDashboard();populateTermFilter();debouncedSave(${idx})"></div>
+          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx});renderDashboard();debouncedSave(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value;debouncedSave(${idx})"></div>
+          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx});renderDashboard();debouncedSave(${idx})"></div>
+          <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value;debouncedSave(${idx})"></div>
           <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียน ${p.term||''} นี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})}">🗑 ลบภาคเรียน</button></div>
         </div>
         <div style="padding:0 14px 14px;font-size:13px;color:var(--text2)">
@@ -1856,23 +1856,23 @@ function renderGpaPanel(idx){
       </div>
       <div class="sem-record-body">
         <div class="form-grid" style="padding:14px">
-          <div class="fg"><label>ภาคเรียน</label><input value="${g.term||''}" onchange="DB.students[${idx}].semGpa[${gi}].term=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><label>GPA</label><input type="number" step="0.01" min="0" max="4" value="${g.gpa||''}" onchange="DB.students[${idx}].semGpa[${gi}].gpa=parseFloat(this.value)||0;renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ภาคเรียน</label><input value="${g.term||''}" onchange="DB.students[${idx}].semGpa[${gi}].term=this.value;debouncedSave(${idx})"></div>
+          <div class="fg"><label>GPA</label><input type="number" step="0.01" min="0" max="4" value="${g.gpa||''}" onchange="DB.students[${idx}].semGpa[${gi}].gpa=parseFloat(this.value)||0;renderGpaPanel(${idx});debouncedSave(${idx})"></div>
           <div class="fg"><label>ระดับความเสี่ยง</label>
-            <select onchange="DB.students[${idx}].semGpa[${gi}].riskLevel=this.value;renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})">
+            <select onchange="DB.students[${idx}].semGpa[${gi}].riskLevel=this.value;renderGpaPanel(${idx});debouncedSave(${idx})">
               ${['สูงมาก','สูง','ปานกลาง','ต่ำ'].map(v=>`<option ${g.riskLevel===v?'selected':''}>${v}</option>`).join('')}
             </select>
           </div>
           <div class="fg"><label>มีอุปสรรค</label>
-            <select onchange="DB.students[${idx}].semGpa[${gi}].hasObstacle=this.value==='true';saveToStorage();saveStudentToSheet(${idx})">
+            <select onchange="DB.students[${idx}].semGpa[${gi}].hasObstacle=this.value==='true';debouncedSave(${idx})">
               <option value="true" ${g.hasObstacle?'selected':''}>มี</option>
               <option value="false" ${!g.hasObstacle?'selected':''}>ไม่มี</option>
             </select>
           </div>
-          <div class="fg"><label>ประเภทอุปสรรค</label><input value="${g.obstacleType||''}" onchange="DB.students[${idx}].semGpa[${gi}].obstacleType=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><label>วิชาที่อ่อน</label><input value="${g.weakSubjects||''}" onchange="DB.students[${idx}].semGpa[${gi}].weakSubjects=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg fg-full"><label>การช่วยเหลือของโรงเรียน</label><input value="${g.schoolSupport||''}" onchange="DB.students[${idx}].semGpa[${gi}].schoolSupport=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียนนี้?')){DB.students[${idx}].semGpa.splice(${gi},1);renderGpaPanel(${idx});saveToStorage();saveStudentToSheet(${idx})}">🗑 ลบ</button></div>
+          <div class="fg"><label>ประเภทอุปสรรค</label><input value="${g.obstacleType||''}" onchange="DB.students[${idx}].semGpa[${gi}].obstacleType=this.value;debouncedSave(${idx})"></div>
+          <div class="fg"><label>วิชาที่อ่อน</label><input value="${g.weakSubjects||''}" onchange="DB.students[${idx}].semGpa[${gi}].weakSubjects=this.value;debouncedSave(${idx})"></div>
+          <div class="fg fg-full"><label>การช่วยเหลือของโรงเรียน</label><input value="${g.schoolSupport||''}" onchange="DB.students[${idx}].semGpa[${gi}].schoolSupport=this.value;debouncedSave(${idx})"></div>
+          <div class="fg"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียนนี้?')){DB.students[${idx}].semGpa.splice(${gi},1);renderGpaPanel(${idx});debouncedSave(${idx})}">🗑 ลบ</button></div>
         </div>
       </div>
     </div>`;
@@ -2714,7 +2714,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWR65QVr1ILP2zRRkavlSms0jfum5ynWz9VBANdhoXJKEMbHWtfHFiT1wD9BAo20JjTQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9xK1wDtK1Hkpt4hEqTNC32TrZr4NrPQ4ftx__U-JWQs1eYN4cF7cwcdXyFV1P8ha6ng/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2943,6 +2943,22 @@ function cleanForSheet(s) {
       weakSubjects:  g.weakSubjects  || '',
       schoolSupport: g.schoolSupport || '',
     })),
+
+    // ─── GPA แบบ column (แต่ละภาคเรียน = column ใหม่) ──────
+    // ใช้ key: GPA_1/2568, Risk_1/2568, Obs_1/2568, ObsType_1/2568, WeakSub_1/2568, Support_1/2568
+    ...Object.fromEntries(
+      (s.semGpa || []).flatMap(g => {
+        const t = g.term || 'unknown';
+        return [
+          [`GPA_${t}`,          Number(g.gpa) || 0],
+          [`Risk_${t}`,         g.riskLevel   || ''],
+          [`Obs_${t}`,          g.hasObstacle ? 'TRUE' : 'FALSE'],
+          [`ObsType_${t}`,      g.obstacleType  || ''],
+          [`WeakSub_${t}`,      g.weakSubjects  || ''],
+          [`Support_${t}`,      g.schoolSupport || ''],
+        ];
+      })
+    ),
   };
 }
 
@@ -3108,13 +3124,28 @@ async function saveStudentToSheet(idx) {
     // 1) upsert students + payment sheet
     const result = await gasPost({ action: 'upsert', student: cleaned });
     if (result.lastUpdated) lastKnownUpdate = result.lastUpdated;
-    // 2) upsert GPA sheet แยก (ส่ง semGpa ตรงๆ ไม่ผ่าน cleanForSheet)
+    // 2) upsert GPA sheet แบบ column format (แต่ละภาคเรียน = column ใหม่ พร้อม header)
     if (s.semGpa && s.semGpa.length > 0) {
-      const gpaResult = await gasPost({ action: 'upsertGpa', student: {
+      // สร้าง flat object: { id, no, name, school_m1, GPA_1/2568, Risk_1/2568, ... }
+      const gpaColObj = {
         id: s.id, no: s.no, name: s.name,
+        nickname: s.nickname || '',
         school_m1: s.school_m1 || '',
-        semGpa: s.semGpa
-      }});
+        province: s.province || '',
+        gpa_p6: s.gpa_p6 || '',
+      };
+      s.semGpa.forEach(g => {
+        const t = g.term || 'unknown';
+        gpaColObj[`GPA_${t}`]     = Number(g.gpa) || 0;
+        gpaColObj[`Risk_${t}`]    = g.riskLevel   || '';
+        gpaColObj[`Obs_${t}`]     = g.hasObstacle ? 'TRUE' : 'FALSE';
+        gpaColObj[`ObsType_${t}`] = g.obstacleType  || '';
+        gpaColObj[`WeakSub_${t}`] = g.weakSubjects  || '';
+        gpaColObj[`Support_${t}`] = g.schoolSupport || '';
+      });
+      // ยังส่ง semGpa array ไปด้วยเพื่อ backward-compat
+      gpaColObj.semGpa = s.semGpa;
+      const gpaResult = await gasPost({ action: 'upsertGpa', student: gpaColObj });
       if (gpaResult.lastUpdated) lastKnownUpdate = gpaResult.lastUpdated;
     }
     isConnected = true; _retryCount = 0;
@@ -3213,6 +3244,17 @@ function startNavAvatarRotation() {
 }
 
 function updateSyncStatus(connected, label) { setSyncDot(connected ? 'online' : 'offline'); }
+
+// ─── Debounced save: รอ 1.5 วินาทีหลังหยุดแก้ไขค่อย sync ──
+const _debounceSaveTimers = {};
+function debouncedSave(idx) {
+  saveToStorage(); // บันทึก local ทันที
+  if (_debounceSaveTimers[idx]) clearTimeout(_debounceSaveTimers[idx]);
+  _debounceSaveTimers[idx] = setTimeout(() => {
+    delete _debounceSaveTimers[idx];
+    saveStudentToSheet(idx);
+  }, 1500);
+}
 
 function showStatus(msg, type = 'success') {
   let bar = document.getElementById('status-bar');
