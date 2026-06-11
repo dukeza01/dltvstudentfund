@@ -96,6 +96,13 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
   position:relative;
 }
 .nav-btn .nav-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center}
+/* Student photo avatar in nav */
+.nav-avatar-img{
+  width:26px;height:26px;border-radius:50%;
+  object-fit:cover;object-position:top center;
+  border:1.5px solid rgba(255,255,255,0.35);
+  display:block;flex-shrink:0;
+}
 .nav-btn:hover{background:var(--sidebar-item-hover);color:rgba(255,255,255,0.9)}
 .nav-btn.active{
   background:var(--sidebar-item-active);
@@ -855,7 +862,7 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
   </div>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>เลขสัญญา</th><th>วันที่สัญญา</th><th>ธนาคาร นร.</th><th>สาขา</th><th>เลขบัญชี นร.</th><th>ธนาคาร รร.</th><th>สาขา</th><th>เลขบัญชี รร.</th><th>จัดการ</th></tr></thead>
+      <thead><tr><th>#</th><th class="photo-cell">รูป</th><th>ชื่อ-สกุล</th><th>เลขสัญญา</th><th>วันที่สัญญา</th><th>ธนาคาร นร.</th><th>สาขา</th><th>เลขบัญชี นร.</th><th>ธนาคาร รร.</th><th>สาขา</th><th>เลขบัญชี รร.</th><th>จัดการ</th></tr></thead>
       <tbody id="banking-tbody"></tbody>
     </table>
     <div class="tbl-footer" id="banking-footer"></div>
@@ -874,7 +881,7 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
   </div>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>ชื่อ-สกุล</th><th>โรงเรียน ม.1</th><th>จังหวัด</th><th>ภาคเรียน</th><th>ส่วนที่ 1 — ค่าบำรุงฯ</th><th>ส่วนที่ 2 — ค่าใช้จ่าย</th><th>รวม (บาท)</th><th>จัดการ</th></tr></thead>
+      <thead><tr><th>#</th><th class="photo-cell">รูป</th><th>ชื่อ-สกุล</th><th>โรงเรียน ม.1</th><th>จังหวัด</th><th>ภาคเรียน</th><th>ส่วนที่ 1 — ค่าบำรุงฯ</th><th>ส่วนที่ 2 — ค่าใช้จ่าย</th><th>รวม (บาท)</th><th>จัดการ</th></tr></thead>
       <tbody id="payment-tbody"></tbody>
     </table>
     <div class="tbl-footer" id="payment-footer"></div>
@@ -1816,10 +1823,10 @@ function renderPaymentPanel(idx){
         </div>
         <!-- แบบฟอร์มแก้ไข -->
         <div class="form-grid" style="padding:14px">
-          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ภาคเรียน</label><input value="${p.term||''}" onchange="DB.students[${idx}].semPayments[${pi}].term=this.value;saveToStorage();saveStudentToSheet(${idx});renderDashboard();populateTermFilter()"></div>
+          <div class="fg"><label>ส่วนที่ 1 (บาท) — ค่าบำรุงการศึกษา</label><input type="number" value="${p.p1||0}" onchange="DB.students[${idx}].semPayments[${pi}].p1=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx});renderDashboard()"></div>
           <div class="fg"><label>รายการส่วนที่ 1</label><input value="${p.item1||''}" onchange="DB.students[${idx}].semPayments[${pi}].item1=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
-          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})"></div>
+          <div class="fg"><label>ส่วนที่ 2 (บาท) — ค่าใช้จ่ายในการเรียน</label><input type="number" value="${p.p2||0}" onchange="DB.students[${idx}].semPayments[${pi}].p2=parseFloat(this.value)||0;renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx});renderDashboard()"></div>
           <div class="fg"><label>รายการส่วนที่ 2</label><input value="${p.item2||''}" onchange="DB.students[${idx}].semPayments[${pi}].item2=this.value;saveToStorage();saveStudentToSheet(${idx})"></div>
           <div class="fg" style="align-self:end"><button class="btn btn-danger btn-sm" onclick="if(confirm('ลบข้อมูลภาคเรียน ${p.term||''} นี้?')){DB.students[${idx}].semPayments.splice(${pi},1);renderPaymentPanel(${idx});saveToStorage();saveStudentToSheet(${idx})}">🗑 ลบภาคเรียน</button></div>
         </div>
@@ -1879,9 +1886,25 @@ function toggleSemRecord(el){
   const body=el.nextElementSibling;
   body.classList.toggle('open');
 }
+function nextTermAfter(terms){
+  // terms: array of strings like '1/2568', '2/2568'
+  if(!terms||terms.length===0) return '1/2568';
+  const sorted=[...terms].sort((a,b)=>{
+    const pa=String(a).match(/(\d+)\/(\d+)/),pb=String(b).match(/(\d+)\/(\d+)/);
+    if(!pa||!pb) return 0;
+    return (parseInt(pa[2])*10+parseInt(pa[1]))-(parseInt(pb[2])*10+parseInt(pb[1]));
+  });
+  const last=sorted[sorted.length-1];
+  const m=String(last).match(/(\d+)\/(\d+)/);
+  if(!m) return last;
+  const sem=parseInt(m[1]),yr=parseInt(m[2]);
+  return sem===1?`2/${yr}`:`1/${yr+1}`;
+}
 function addSemPayment(idx){
   if(!DB.students[idx].semPayments) DB.students[idx].semPayments=[];
-  DB.students[idx].semPayments.push({term:'',p1:0,p2:0,item1:'ค่าเงินบำรุงการศึกษา',item2:'ค่าใช้จ่ายในการเรียน'});
+  const existingTerms=DB.students[idx].semPayments.map(p=>p.term).filter(Boolean);
+  const newTerm=nextTermAfter(existingTerms);
+  DB.students[idx].semPayments.push({term:newTerm,p1:0,p2:0,item1:'ค่าเงินบำรุงการศึกษา',item2:'ค่าใช้จ่ายในการเรียน'});
   renderPaymentPanel(idx);
   saveToStorage();
   saveStudentToSheet(idx);
@@ -1889,7 +1912,9 @@ function addSemPayment(idx){
 }
 function addSemGpa(idx){
   if(!DB.students[idx].semGpa) DB.students[idx].semGpa=[];
-  DB.students[idx].semGpa.push({term:'',gpa:0,riskLevel:'ปานกลาง',hasObstacle:false,obstacleType:'',weakSubjects:'',schoolSupport:''});
+  const existingTerms=DB.students[idx].semGpa.map(g=>g.term).filter(Boolean);
+  const newTerm=nextTermAfter(existingTerms);
+  DB.students[idx].semGpa.push({term:newTerm,gpa:0,riskLevel:'ปานกลาง',hasObstacle:false,obstacleType:'',weakSubjects:'',schoolSupport:''});
   renderGpaPanel(idx);
   saveToStorage();
   saveStudentToSheet(idx);
@@ -2048,7 +2073,7 @@ function renderBanking(){
   const filtered=DB.students.filter(s=>{const b=s.bank||{};return !q||(s.name+(b.bankSt||'')+(b.accNoSt||'')).toLowerCase().includes(q);});
   document.getElementById('banking-tbody').innerHTML=filtered.map(s=>{
     const b=s.bank||{};const idx=DB.students.indexOf(s);
-    return`<tr><td>${s.no}</td><td style="font-weight:600">${s.name}</td>
+    return`<tr><td>${s.no}</td><td class="photo-cell">${photoEl(s)}</td><td style="font-weight:600">${s.name}<div style="font-size:11px;color:var(--text3)">${s.nickname||''}</div></td>
       <td style="font-family:'Sarabun',monospace;font-size:11px">${b.contract||'-'}</td>
       <td style="font-size:12px">${b.contractDate||'-'}</td>
       <td><span class="badge b-blue">${b.bankSt||'-'}</span></td>
@@ -2082,7 +2107,7 @@ function renderPayment(){
   document.getElementById('payment-tbody').innerHTML=rows.map(({s,p})=>{
     const idx=DB.students.indexOf(s);
     const total=(p.p1||0)+(p.p2||0);
-    return`<tr><td>${s.no}</td><td style="font-weight:600">${s.name}<div style="font-size:11px;color:var(--text3)">${s.nickname||''}</div></td>
+    return`<tr><td>${s.no}</td><td class="photo-cell">${photoEl(s)}</td><td style="font-weight:600">${s.name}<div style="font-size:11px;color:var(--text3)">${s.nickname||''}</div></td>
       <td style="font-size:12px">${s.school_m1||'-'}</td>
       <td><span class="badge b-blue">${s.province||'-'}</span></td>
       <td><span class="badge b-gray">${p.term||'-'}</span></td>
@@ -2947,6 +2972,7 @@ async function loadFromSheet(silent = false) {
     loadFromStorage();  // โหลดรูป base64 จาก localStorage ทับ
     saveToStorage();
     renderDashboard(); renderStudents(); populateFilters();
+    startNavAvatarRotation();
     if (!silent) showStatus('✅ โหลดสำเร็จ — ' + DB.students.length + ' คน', 'success');
     setSyncDot('online');
     startPolling();
@@ -3156,7 +3182,36 @@ function exportJSON() {
   showStatus('✅ Export JSON สำเร็จ', 'success');
 }
 
-// ─── UI helpers ───────────────────────────────────────────
+// ─── Sidebar nav student avatars ─────────────────────────
+let _navAvatarTimer = null;
+let _navAvatarIdx = { banking: 0, payment: 1 };
+
+function updateNavAvatars() {
+  const students = DB.students || [];
+  const withPhoto = students.filter(s => s.photoUrl);
+  if (!withPhoto.length) return;
+
+  ['banking', 'payment'].forEach(key => {
+    const el = document.getElementById('nav-avatar-' + key);
+    if (!el) return;
+    const s = withPhoto[_navAvatarIdx[key] % withPhoto.length];
+    if (!s) return;
+    const src = fixDriveUrl(s.photoUrl);
+    el.innerHTML = `<img class="nav-avatar-img" src="${src}"
+      alt="${s.name}"
+      onerror="this.style.display='none';this.parentElement.textContent='${initials(s.name)}'">`;
+    _navAvatarIdx[key] = (_navAvatarIdx[key] + 3) % Math.max(withPhoto.length, 1);
+  });
+}
+
+function startNavAvatarRotation() {
+  updateNavAvatars();
+  if (_navAvatarTimer) clearInterval(_navAvatarTimer);
+  _navAvatarTimer = setInterval(() => {
+    updateNavAvatars();
+  }, 4000);
+}
+
 function updateSyncStatus(connected, label) { setSyncDot(connected ? 'online' : 'offline'); }
 
 function showStatus(msg, type = 'success') {
@@ -3235,6 +3290,7 @@ function deleteStudent(idx) {
   renderDashboard();
   renderStudents();
   populateFilters();
+  startNavAvatarRotation();
   // โหลดข้อมูลจาก Sheet อัตโนมัติเมื่อเปิดหน้า (silent ถ้ายังไม่ตั้ง URL)
   if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_WEB_APP_URL_HERE') {
     loadFromSheet(false);
