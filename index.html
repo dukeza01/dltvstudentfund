@@ -1165,7 +1165,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbx9xK1wDtK1Hkpt4hEqTNC32TrZr4NrPQ4ftx__U-JWQs1eYN4cF7cwcdXyFV1P8ha6ng/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwxDNIhIYZBKrrwC-6jNCmEwmlYQ1xCFoBeC6j6zJIAeEZBTrfBZxmtTrW3kqrqw_Go4g/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -2577,7 +2577,7 @@ function switchPhotoSource(type, btn, idx) {
 // ============ LOCAL STORAGE PERSISTENCE ============
 const STORAGE_KEY = 'dltv_student_photos';
 const STORAGE_KEY_DATA = 'dltv_students_data';
-const DATA_VERSION = '2568v7_semgpa_sync'; // v7: ส่ง semGpa ครบทุก record ข้ามเครื่อง
+const DATA_VERSION = '2568v9_empty_sheet_guard'; // v9: กัน Sheet ว่างทับข้อมูลตั้งต้น + ล้าง cache ค่าว่าง
 // ล้าง cache เก่าถ้า version ไม่ตรง (ล้างทั้งหมดเพื่อให้โหลดข้อมูลใหม่จาก RAW)
 if (localStorage.getItem('dltv_data_version') !== DATA_VERSION) {
   localStorage.removeItem(STORAGE_KEY_DATA);
@@ -2704,6 +2704,29 @@ function loadFromStorage() {
   }
 }
 
+// โหลด "เฉพาะรูป" จาก localStorage มาวางทับ (ไม่แตะข้อมูลส่วนอื่น)
+// ใช้หลังจากดึงข้อมูลสดจาก Google Sheet เพื่อกู้รูปที่อัปโหลดในเครื่อง (base64)
+// กลับมา โดยไม่ทับข้อมูลนักเรียนที่เพิ่งโหลดมาจาก Sheet
+function loadPhotosFromStorage() {
+  try {
+    const rawPhotos = localStorage.getItem(STORAGE_KEY);
+    if (!rawPhotos) return;
+    const photos = JSON.parse(rawPhotos);
+    DB.students.forEach(s => {
+      const key = s.id || s.no;
+      const local = photos[key];
+      if (!local) return;
+      // ใช้รูป local ก็ต่อเมื่อ (1) Sheet ไม่มีรูป หรือ (2) รูป local เป็นภาพอัปโหลด base64
+      // ในกรณีอื่นให้ใช้ URL รูปจาก Sheet เป็นหลัก เพื่อให้รูปที่แก้ใน Sheet ขึ้นในทุกเครื่อง
+      if (!s.photoUrl || (typeof local === 'string' && local.startsWith('data:'))) {
+        s.photoUrl = local;
+      }
+    });
+  } catch(e) {
+    console.warn('loadPhotosFromStorage error:', e);
+  }
+}
+
 // ╔══════════════════════════════════════════════════════════╗
 //  REAL-TIME SYNC ENGINE — GitHub Pages + Google Apps Script
 //  Strategy: 5-second smart polling + optimistic UI
@@ -2714,7 +2737,7 @@ function loadFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9xK1wDtK1Hkpt4hEqTNC32TrZr4NrPQ4ftx__U-JWQs1eYN4cF7cwcdXyFV1P8ha6ng/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxDNIhIYZBKrrwC-6jNCmEwmlYQ1xCFoBeC6j6zJIAeEZBTrfBZxmtTrW3kqrqw_Go4g/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -2982,10 +3005,23 @@ async function loadFromSheet(silent = false) {
     const res  = await fetch(SCRIPT_URL + '?t=' + Date.now()); // cache-bust
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message || 'โหลดไม่สำเร็จ');
-    DB.students = json.data.map(s => normalizeStudent(s));
+    const incoming = Array.isArray(json.data) ? json.data : [];
+
+    // ── ป้องกัน "ไก่กับไข่": ถ้า Sheet ยังว่าง แต่ในเครื่องมีข้อมูลตั้งต้นอยู่
+    //    ห้ามเอา array ว่างไปทับ — ให้คงข้อมูลเดิมไว้ แล้วชวนให้กด Save อัปโหลดขึ้น Sheet
+    if (incoming.length === 0 && DB.students && DB.students.length > 0) {
+      isConnected = true; _retryCount = 0;
+      lastKnownUpdate = json.lastUpdated || lastKnownUpdate;
+      setSyncDot('online');
+      startPolling();
+      if (!silent) showStatus('⚠️ Google Sheet ยังว่าง — กดปุ่ม 💾 Save (ซ้ายล่าง) เพื่ออัปโหลดข้อมูลตั้งต้น ' + DB.students.length + ' คนขึ้น Sheet', 'info');
+      return true;
+    }
+
+    DB.students = incoming.map(s => normalizeStudent(s));
     lastKnownUpdate = json.lastUpdated || null;
     isConnected = true; _retryCount = 0;
-    loadFromStorage();  // โหลดรูป base64 จาก localStorage ทับ
+    loadPhotosFromStorage();  // กู้เฉพาะรูป base64 จาก localStorage (ไม่ทับข้อมูลจาก Sheet)
     saveToStorage();
     renderDashboard(); renderStudents(); populateFilters();
     startNavAvatarRotation();
@@ -2995,7 +3031,7 @@ async function loadFromSheet(silent = false) {
     return true;
   } catch (err) {
     setSyncDot('offline');
-    if (!silent) showStatus('❌ โหลดไม่สำเร็จ: ' + err.message, 'error');
+    if (!silent) showStatus('❌ เชื่อมต่อ Google Sheet ไม่ได้ (กำลังแสดงข้อมูลออฟไลน์): ' + err.message + ' — กด 🔄 Sync เพื่อลองใหม่', 'error');
     return false;
   } finally {
     if (!silent) showLoading(false);
@@ -3012,7 +3048,10 @@ function stopPolling() {
 }
 
 async function pollTick() {
-  if (!isConnected || _isSaving) return; // ข้ามถ้ากำลังบันทึกอยู่
+  // ข้ามถ้า: ไม่ได้เชื่อมต่อ / กำลังบันทึก / กำลังเปิดหน้าต่างแก้ไขนักเรียนอยู่
+  // (กันไม่ให้ข้อมูลจาก Sheet มาทับรายการที่ผู้ใช้กำลังกรอก เช่น เพิ่งกดเพิ่มภาคเรียนใหม่)
+  if (!isConnected || _isSaving || editingIndex !== null) return;
+  if (Object.keys(_debounceSaveTimers).length > 0) return; // มีการแก้ไขรอ save อยู่
   try {
     // Step 1: check lastUpdated เท่านั้น (super lightweight)
     const res  = await fetch(SCRIPT_URL + '?check=1&t=' + Date.now());
