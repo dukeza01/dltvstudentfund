@@ -652,6 +652,224 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
 #lightbox-close{position:fixed;top:18px;right:22px;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:24px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.15s;z-index:9001}
 #lightbox-close:hover{background:rgba(255,255,255,0.3)}
 #lightbox-no-photo{color:#888;font-size:14px;font-family:var(--font-body);text-align:center;padding:40px}
+
+/* ═══════════════════════════════════════════
+   SF · แบบฟอร์มทุนการศึกษา (Form 1 / Form 2)
+═══════════════════════════════════════════ */
+.sf-root{max-width:none;width:100%;margin:0;padding:6px 4px 18px}
+/* ===== Motion tokens ===== */
+:root{
+  --sf-ease: cubic-bezier(.16,1,.3,1);
+  --sf-ease-spring: cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes sfSlideInNext{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sfSlideInPrev{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sfFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sfPopIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes sfDotPulse{0%{box-shadow:0 0 0 0 var(--blue-lt)}70%{box-shadow:0 0 0 8px rgba(59,130,246,0)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}}
+@keyframes sfRowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sfCheckPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){
+  .sf-section-card,.sf-card,.sf-data-table tr,.sf-step-num{animation:none!important}
+}
+
+.sf-btn{border:none;border-radius:var(--rad);font-family:var(--font-body);font-weight:600;cursor:pointer;transition:transform .15s var(--sf-ease-spring),box-shadow .15s ease,background .15s ease,border-color .15s ease,color .15s ease}
+.sf-btn:active{transform:scale(.96)}
+.sf-btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;padding:11px 22px;font-size:14px;box-shadow:var(--shadow)}
+.sf-btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.sf-btn-primary:active:not(:disabled){transform:translateY(0) scale(.97)}
+.sf-btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.sf-btn-secondary{background:var(--bg4);color:var(--text);border:1.5px solid var(--border2);padding:10px 20px;font-size:14px}
+.sf-btn-secondary:hover:not(:disabled){border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+.sf-btn-secondary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.sf-btn-ghost{background:transparent;color:var(--text2);padding:8px 14px;font-size:13.5px;border:1.5px solid transparent}
+.sf-btn-ghost:hover{background:var(--bg2);color:var(--text);border-color:var(--border)}
+.sf-btn-add{background:var(--bg2);color:var(--text2);border:1.5px dashed var(--border2);padding:8px 16px;font-size:13px;margin-top:10px}
+.sf-btn-add:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-lt);transform:translateY(-1px)}
+.sf-btn-icon{width:26px;height:26px;border-radius:50%;background:transparent;border:none;color:var(--text3);font-size:11px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s,transform .15s}
+.sf-btn-icon:hover{background:var(--red-lt);color:var(--red);transform:scale(1.12)}
+
+/* Picker (student list) */
+.sf-picker-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.sf-picker-head h2{font-family:var(--font-heading);font-size:19px;margin:0}
+.sf-search{padding:10px 16px;border-radius:999px;border:1.5px solid var(--border2);font-family:var(--font-body);font-size:14px;min-width:280px;background:var(--bg4);transition:border-color .15s,box-shadow .15s}
+.sf-search:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-lt)}
+.sf-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.sf-card{position:relative;display:flex;align-items:center;gap:14px;text-align:left;background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--rad-lg);padding:16px 44px 16px 16px;width:100%;box-shadow:var(--shadow);transition:border-color .18s ease,transform .18s var(--sf-ease-spring),box-shadow .18s ease;animation:sfPopIn .35s var(--sf-ease) both}
+.sf-picker-grid>.sf-card:nth-child(4n+1){background:linear-gradient(150deg,var(--blue-lt) 0%,#fff 70%)}
+.sf-picker-grid>.sf-card:nth-child(4n+2){background:linear-gradient(150deg,var(--teal-lt) 0%,#fff 70%)}
+.sf-picker-grid>.sf-card:nth-child(4n+3){background:linear-gradient(150deg,var(--amber-lt) 0%,#fff 70%)}
+.sf-picker-grid>.sf-card:nth-child(4n+4){background:linear-gradient(150deg,var(--green-lt) 0%,#fff 70%)}
+.sf-card:hover{border-color:var(--blue);transform:translateY(-3px) scale(1.01);box-shadow:var(--shadow-md)}
+.sf-card:active{transform:translateY(-1px) scale(.99)}
+.sf-card-avatar{position:relative;flex:none;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:16px;font-weight:700;transition:transform .2s var(--sf-ease-spring);overflow:hidden}
+.sf-card-photo{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.sf-card-avatar-fallback{display:none;align-items:center;justify-content:center;width:100%;height:100%}
+.sf-card-order{position:absolute;top:10px;left:10px;background:var(--ink,var(--text));background:rgba(24,38,66,.78);color:#fff;font-family:monospace;font-size:10.5px;font-weight:700;min-width:20px;height:20px;padding:0 5px;border-radius:999px;display:flex;align-items:center;justify-content:center;z-index:1}
+.sf-card:hover .sf-card-avatar{transform:scale(1.08) rotate(-4deg)}
+.sf-card-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sf-card-name{font-weight:700;font-size:14.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-card-meta{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-card-status{display:flex;gap:6px;margin-top:5px}
+.sf-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bg2);color:var(--text3);transition:background .2s,color .2s}
+.sf-tag.done{background:var(--teal-lt);color:var(--teal)}
+
+/* Editor */
+.sf-editor{animation:sfFadeIn .3s var(--sf-ease) both}
+.sf-editor-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.sf-editor-top-left{display:flex;align-items:center;gap:14px}
+.sf-student-chip{display:flex;align-items:baseline;gap:8px}
+.sf-student-chip-name{font-weight:700;font-family:var(--font-heading);font-size:17px}
+.sf-student-chip-id{font-family:monospace;font-size:12px;color:var(--text2)}
+.sf-editor-top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sf-save-status{font-size:12px;color:var(--text3);padding:5px 12px;border-radius:999px;background:var(--bg4);border:1px solid var(--border);transition:color .3s ease,border-color .3s ease,background .3s ease}
+.sf-save-status.saving{color:var(--blue);border-color:var(--blue);background:var(--blue-lt)}
+.sf-save-status.saved{color:var(--teal);border-color:var(--teal);background:var(--teal-lt)}
+
+.sf-tabs{display:flex;gap:10px;margin-bottom:20px}
+.sf-tab{flex:1;text-align:left;background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--rad);padding:12px 16px;font-weight:700;font-size:14px;color:var(--text2);display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:border-color .18s,background .18s,transform .15s var(--sf-ease-spring),box-shadow .18s}
+.sf-tab:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.sf-tab span{font-weight:500;font-size:11.5px;color:var(--text3);transition:color .18s}
+.sf-tab.active{border-color:transparent;color:#fff;background:linear-gradient(135deg,var(--blue),var(--teal));box-shadow:var(--shadow-md)}
+.sf-tab.active span{color:rgba(255,255,255,.85)}
+
+/* Stepper (plain numbers, no Thai numerals) */
+.sf-stepper-wrap{position:relative;margin:0 0 26px;padding:0 4px}
+.sf-stepper-track{position:absolute;top:15px;left:15px;right:15px;height:3px;background:var(--border2);border-radius:3px;z-index:0;overflow:hidden}
+.sf-stepper-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:3px;transition:width .35s var(--sf-ease)}
+.sf-stepper-steps{position:relative;z-index:1;display:flex;align-items:flex-start}
+.sf-step{background:transparent;border:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:32px;flex:none;color:var(--text3);cursor:pointer}
+.sf-step-num{width:32px;height:32px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--text2);transition:all .25s var(--sf-ease-spring)}
+.sf-step:hover .sf-step-num{transform:translateY(-2px);border-color:var(--blue);color:var(--blue)}
+.sf-step.complete .sf-step-num{border-color:var(--teal);color:var(--teal);background:var(--teal-lt)}
+.sf-step.active .sf-step-num{border-color:var(--blue);color:#fff;background:var(--blue);transform:scale(1.12);animation:sfDotPulse 1.6s ease-out 1}
+.sf-step-label{font-size:10px;max-width:66px;text-align:center;line-height:1.25;visibility:hidden;height:0;transition:color .2s}
+.sf-step.active .sf-step-label{visibility:visible;height:auto;color:var(--text);font-weight:700;margin-top:2px}
+.sf-step-seg{flex:1}
+
+/* Section card / fields */
+.sf-section-card{background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--rad-lg);box-shadow:var(--shadow);padding:28px 28px 22px;animation:sfSlideInNext .35s var(--sf-ease) both}
+.sf-section-card.sf-dir-prev{animation-name:sfSlideInPrev}
+.sf-section-card.sf-dir-jump{animation-name:sfFadeIn}
+.sf-section-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:16px;border-bottom:1.5px solid var(--border)}
+.sf-section-num{font-family:var(--font-heading);font-weight:700;font-size:16px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--teal));width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:var(--shadow)}
+.sf-section-head h2{font-family:var(--font-heading);font-size:18px;margin:0}
+.sf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px 22px;align-items:start}
+.sf-item{display:flex;flex-direction:column;gap:7px}
+.sf-item.full{grid-column:1/-1}
+.sf-label{font-size:12.5px;font-weight:600;color:var(--text2)}
+.sf-input{border:1.5px solid var(--border2);border-radius:var(--rad);padding:11px 13px;font-size:14.5px;color:var(--text);background:#fcfcfb;font-family:var(--font-body);transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.sf-input:hover{border-color:var(--text3)}
+.sf-input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px var(--blue-lt)}
+.sf-input.mono{font-family:monospace;letter-spacing:.4px}
+.sf-textarea{resize:vertical;min-height:72px;line-height:1.65}
+.sf-heading{grid-column:1/-1;font-family:var(--font-heading);font-weight:700;font-size:15px;color:var(--blue-dk);margin:6px -8px -2px;padding:10px 14px;border-top:none;background:var(--blue-lt);border-radius:var(--rad)}
+.sf-grid>.sf-heading:first-child{margin-top:-4px}
+.sf-note{grid-column:1/-1;font-size:12.5px;color:var(--amber);background:var(--amber-lt);border-radius:var(--rad);padding:10px 14px;border:1px dashed #E4C77A}
+.sf-choices{display:flex;flex-wrap:wrap;gap:9px 16px}
+.sf-choice{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--text);cursor:pointer;padding:6px 10px;border-radius:999px;border:1.5px solid var(--border);transition:border-color .15s,background .15s,transform .15s}
+.sf-choice:hover{border-color:var(--blue);background:var(--blue-lt);transform:translateY(-1px)}
+.sf-choice input[type=radio],.sf-choice input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px}
+.sf-choice input:checked{animation:sfCheckPop .25s var(--sf-ease-spring)}
+.sf-choice-other{flex-basis:100%;border-style:dashed}
+.sf-other-input{max-width:280px;padding:6px 10px}
+
+.sf-table-wrap{grid-column:1/-1;overflow-x:auto}
+.sf-data-table{width:100%;border-collapse:collapse;font-size:13px}
+.sf-data-table th{text-align:left;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue-dk));padding:10px 9px;border-bottom:1.5px solid var(--border);white-space:nowrap}
+.sf-data-table th:first-child{border-top-left-radius:8px}
+.sf-data-table th:last-child{border-top-right-radius:8px}
+.sf-data-table td{padding:6px;border-bottom:1px solid var(--border);vertical-align:top}
+.sf-data-table tbody tr:nth-child(even){background:var(--bg2)}
+.sf-data-table tbody tr:hover{background:var(--blue-lt)}
+.sf-data-table tbody tr{animation:sfRowIn .25s var(--sf-ease) both;transition:background .15s}
+.sf-data-table .sf-cell-input,.sf-data-table .sf-col-head{border:1.5px solid transparent;background:transparent;padding:7px 8px;width:100%;min-width:110px;font-size:13px;border-radius:6px;transition:border-color .15s,background .15s}
+.sf-data-table .sf-col-head{color:#fff;font-weight:700}
+.sf-data-table .sf-col-head::placeholder{color:rgba(255,255,255,.75)}
+.sf-data-table .sf-cell-input:hover{background:var(--bg2)}
+.sf-data-table .sf-col-head:hover{background:rgba(255,255,255,.18)}
+.sf-data-table .sf-cell-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-lt)}
+.sf-data-table .sf-col-head:focus{border-color:#fff;background:rgba(255,255,255,.22);box-shadow:0 0 0 3px rgba(255,255,255,.35);color:#fff}
+.sf-th-x,.sf-td-x{width:28px}
+.sf-th-rowlabel{font-weight:700;color:#fff;white-space:nowrap}
+.sf-td-rowlabel{font-weight:700;color:var(--text);white-space:nowrap}
+
+.sf-section-nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px}
+.sf-section-count{font-family:monospace;font-size:12.5px;color:var(--text3)}
+
+.sf-empty{border:1.5px dashed var(--border2);border-radius:var(--rad-lg);padding:36px 18px;text-align:center;color:var(--text2);background:var(--bg4);animation:sfFadeIn .3s var(--sf-ease) both}
+.sf-empty p{font-weight:700;color:var(--text);margin:0 0 6px}
+
+@media (max-width:760px){
+  .sf-grid{grid-template-columns:1fr}
+  .sf-tabs{flex-direction:column}
+  .sf-step-label{display:none}
+  .sf-editor-top{flex-direction:column;align-items:stretch}
+  .sf-picker-grid{grid-template-columns:1fr}
+}
+
+/* Print replica of the official forms */
+#sf-print-area{display:none}
+@media print{
+  body *{visibility:hidden}
+  #sf-print-area, #sf-print-area *{visibility:visible}
+  #sf-print-area{display:block;position:absolute;top:0;left:0;width:100%;margin:0;padding:0}
+  .sidebar,.topbar{display:none!important}
+}
+.sfp-page{width:210mm;min-height:297mm;padding:14mm 16mm;margin:0 auto;background:#fff;color:#000;font-family:'Sarabun',sans-serif;font-size:12.5px;line-height:1.55;page-break-after:always;position:relative}
+.sfp-page:last-child{page-break-after:auto}
+.sfp-pageno{position:absolute;top:8mm;right:16mm;font-size:11px}
+.sfp-center{text-align:center}
+.sfp-title{font-weight:700;font-size:14px}
+.sfp-sub{font-size:12.5px}
+.sfp-hr{border:none;border-top:1px solid #000;margin:4px 0 10px}
+.sfp-field-line{display:flex;align-items:baseline;gap:4px;margin:5px 0;flex-wrap:wrap}
+.sfp-field-line .sfp-fill{border-bottom:1px dotted #000;flex:1;min-width:40px;padding:0 4px;display:inline-block}
+.sfp-section-title{font-weight:700;margin:14px 0 6px}
+.sfp-checkbox{display:inline-flex;align-items:center;gap:4px;margin-right:14px}
+.sfp-table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:11.5px}
+.sfp-table th,.sfp-table td{border:1px solid #000;padding:4px 6px;text-align:left;vertical-align:top}
+.sfp-table th{background:#f2f2f2;font-weight:700}
+.sfp-sign{margin-top:26px;text-align:center;display:inline-block;min-width:220px}
+.sfp-sign-row{display:flex;justify-content:space-around;margin-top:24px;flex-wrap:wrap;gap:20px}
+
+/* ===== Preview modal ===== */
+.sf-modal-overlay{position:fixed;inset:0;background:rgba(15,17,35,.55);backdrop-filter:blur(3px);z-index:9500;display:flex;align-items:center;justify-content:center;padding:24px;animation:sfFadeIn .2s ease both}
+.sf-modal{width:100%;max-width:900px;max-height:90vh;background:var(--bg4);border-radius:var(--rad-xl);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;animation:sfPopIn .25s var(--sf-ease-spring) both}
+.sf-modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;flex:none}
+.sf-modal-header-left{display:flex;align-items:center;gap:12px;min-width:0}
+.sf-modal-icon{font-size:22px;flex:none}
+.sf-modal-title{font-family:var(--font-heading);font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-modal-sub{font-size:12px;color:rgba(255,255,255,.85)}
+.sf-modal-close{flex:none;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.sf-modal-close:hover{background:rgba(255,255,255,.32);transform:rotate(90deg)}
+.sf-modal-tabs{display:flex;gap:8px;padding:12px 22px 0;flex:none;background:var(--bg4)}
+.sf-modal-tab{background:transparent;border:none;border-bottom:3px solid transparent;padding:10px 6px;font-weight:700;font-size:13.5px;color:var(--text2);cursor:pointer;transition:color .15s,border-color .15s}
+.sf-modal-tab:hover{color:var(--blue)}
+.sf-modal-tab.active{color:var(--blue-dk);border-color:var(--blue)}
+.sf-modal-body{flex:1;overflow-y:auto;padding:20px;background:var(--bg)}
+.sf-modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg4);flex:none}
+
+.sf-preview-pages{display:flex;flex-direction:column;align-items:center;gap:22px}
+.sf-preview-pages .sfp-page{box-shadow:0 6px 28px rgba(15,17,35,.16);border-radius:6px;width:100%;max-width:210mm;margin:0}
+
+.sf-summary-wrap{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}
+.sf-sum-section{background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--rad-lg);padding:16px 18px;box-shadow:var(--shadow);animation:sfFadeIn .25s var(--sf-ease) both}
+.sf-sum-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sf-sum-section-icon{font-size:18px}
+.sf-sum-section-head h3{font-family:var(--font-heading);font-size:14.5px;margin:0;flex:1}
+.sf-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--bg2);color:var(--text3)}
+.sf-pill.sf-pill-done{background:var(--green-lt);color:var(--green)}
+.sf-sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.sf-sum-card{background:var(--bg2);border-radius:var(--rad);padding:10px 12px}
+.sf-sum-card-label{font-size:11px;color:var(--text2);margin-bottom:3px}
+.sf-sum-card-value{font-size:13.5px;font-weight:600;color:var(--text);word-break:break-word}
+.sf-sum-empty{grid-column:1/-1;font-size:12.5px;color:var(--text3);font-style:italic}
+
+@media (max-width:720px){
+  .sf-modal{max-height:95vh}
+  .sf-modal-body{padding:12px}
+}
 </style>
 </head>
 <body>
@@ -699,6 +917,9 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
     <div class="sidebar-section-label">เครื่องมือ</div>
     <button class="nav-btn" onclick="showPage('schoolmap',this)">
       <span class="nav-icon">🗺️</span> แผนที่โรงเรียน
+    </button>
+    <button class="nav-btn" onclick="showPage('scholarform',this)">
+      <span class="nav-icon">📝</span> แบบฟอร์มทุนการศึกษา
     </button>
   </nav>
 
@@ -1009,7 +1230,7 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
   </div>
 </div>
 
-</div><div id="page-schoolmap" class="page" style="display:none">
+<div id="page-schoolmap" class="page" style="display:none">
   <div class="main" style="max-width:1440px;margin:0 auto;padding:18px">
     <div class="toolbar" style="margin-bottom:14px">
       <div class="toolbar-title">🗺️ แผนที่โรงเรียนนักเรียนทุน DLTV</div>
@@ -1038,6 +1259,10 @@ body{font-family:var(--font-body);font-size:15px;line-height:1.65;color:var(--te
       </div>
     </div>
   </div>
+</div>
+
+<div id="page-scholarform" class="page" style="display:none">
+  <div id="sf-root" class="sf-root"></div>
 </div>
 
   </div><!-- /.main -->
@@ -1185,7 +1410,7 @@ function calcAge(dob){
 }
 
 // ============ GOOGLE SHEET LAT/LNG SYNC ============
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycby8_CLDuoAOvf8AnglptVfv43feGYiIUDu-ZSMQXFU29B8Gtx1X_ugzp6jwUSZmY0qeCw/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec';
 
 async function syncLatLngFromSheet(){
   const btn = document.getElementById('sync-latlng-btn');
@@ -1322,6 +1547,7 @@ const PAGE_META = {
   academic:  {title:'ผลการเรียน', sub:'ประวัติ GPA และผลการศึกษา'},
   gpasheet:  {title:'GPA Sheet', sub:'เกรดเฉลี่ยรายชั้นเรียนและรายภาคเรียน'},
   schoolmap: {title:'แผนที่โรงเรียน', sub:'ตำแหน่งโรงเรียนของนักเรียนทุน'},
+  scholarform: {title:'แบบฟอร์มทุนการศึกษา', sub:'แบบฟอร์มที่ 1 ข้อมูลรายบุคคล และแบบฟอร์มที่ 2 ผลการเรียน/ความประพฤติ/การใช้จ่าย'},
 };
 
 function showPage(p,btn){
@@ -1344,6 +1570,7 @@ function showPage(p,btn){
   else if(p==='academic'){populateGpaTerm();renderAcademic();}
   else if(p==='gpasheet'){renderGpaSheet();}
   else if(p==='schoolmap'){setTimeout(initSchoolMap,50);}
+  else if(p==='scholarform'){sfRenderPage();}
 }
 
 function setView(v,btn){
@@ -2757,7 +2984,7 @@ function loadPhotosFromStorage() {
 // ╚══════════════════════════════════════════════════════════╝
 
 // ▸ ใส่ URL ของ Google Apps Script Web App ที่นี่
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8_CLDuoAOvf8AnglptVfv43feGYiIUDu-ZSMQXFU29B8Gtx1X_ugzp6jwUSZmY0qeCw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec';
 
 const POLL_INTERVAL_MS  = 5000;   // poll ทุก 5 วินาที
 const RETRY_MAX         = 3;      // retry ก่อน offline
@@ -3015,7 +3242,7 @@ async function gasPost(body) {
 
 // ─── โหลดครั้งแรก ─────────────────────────────────────────
 async function loadFromSheet(silent = false) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
     if (!silent) showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ใน index.html', 'error');
     return false;
   }
@@ -3173,7 +3400,7 @@ function flashSyncDot() {
 
 // ─── บันทึก 1 คน (optimistic + upsert) ───────────────────
 async function saveStudentToSheet(idx) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
+  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') return;
   const s = DB.students[idx];
   if (!s) return;
   _isSaving = true;
@@ -3222,7 +3449,7 @@ async function saveStudentToSheet(idx) {
 
 // ─── บันทึกทุกคน (import / reset) ────────────────────────
 async function saveAllToSheet() {
-  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
     showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL', 'error'); return;
   }
   if (!confirm('บันทึกข้อมูลทั้งหมด (' + DB.students.length + ' คน) ไปยัง Google Sheet?\n⚠️ จะเขียนทับข้อมูลทั้งหมดใน Sheet')) return;
@@ -3246,7 +3473,7 @@ async function saveAllToSheet() {
 
 // ─── ลบออกจาก Sheet ───────────────────────────────────────
 async function deleteStudentFromSheet(studentId, studentData) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
+  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') return;
   try {
     // 1) ล้าง GPA rows ของนักเรียนคนนี้ก่อน (ส่ง semGpa=[])
     if (studentData) {
@@ -3442,7 +3669,7 @@ function deleteStudent(idx) {
   populateFilters();
   startNavAvatarRotation();
   // โหลดข้อมูลจาก Sheet อัตโนมัติเมื่อเปิดหน้า (silent ถ้ายังไม่ตั้ง URL)
-  if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_WEB_APP_URL_HERE') {
+  if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
     loadFromSheet(false);
   } else {
     showStatus('💡 ตั้งค่า SCRIPT_URL ใน index.html เพื่อเชื่อมต่อ Google Sheet', 'info');
@@ -3636,6 +3863,1184 @@ function renderMapMarkers(filter){
 }
 function filterMapMarkers(){renderMapMarkers();}
 function centerMapThailand(){if(schoolMap)schoolMap.setView([13.5,101.0],6);}
+
+/* ============================================================
+   SF MODULE — แบบฟอร์มทุนการศึกษา (Form 1 / Form 2)
+   Namespaced with `sf` prefix to avoid clashing with the rest
+   of the DLTV system. Persists into each student's own
+   s.form1 / s.form2 objects, saved via the app's existing
+   saveToStorage() (localStorage) — same mechanism as the rest
+   of this system.
+============================================================ */
+function sfEscapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function sfUid(){ return 'r'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+function sfDebounce(fn,ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),ms); }; }
+
+const sfState = { studentIdx:null, formKey:'form1', sectionIndex:0, saveStatus:'idle', lastDir:'jump' };
+
+function sfGetSections(formKey){ return formKey==='form1' ? SF_FORM1 : SF_FORM2; }
+
+/* ---------- Schemas (field labels kept verbatim from the official form; numbering is Arabic per request) ---------- */
+const SF_FORM1 = [
+  { id:'school', title:'ข้อมูลสถานศึกษา', short:'สถานศึกษา', fields:[
+    { id:'school_name', type:'text', label:'ชื่อสถานศึกษา', full:true, from:s=>s.school_m1 },
+    { id:'addr_no', type:'text', label:'เลขที่' },
+    { id:'addr_moo', type:'text', label:'หมู่ที่' },
+    { id:'addr_road', type:'text', label:'ถนน' },
+    { id:'addr_tambon', type:'text', label:'ตำบล/แขวง', from:s=>(s.school_m1_addr&&s.school_m1_addr.district)||'' },
+    { id:'addr_amphoe', type:'text', label:'อำเภอ/เขต', from:s=>(s.school_m1_addr&&s.school_m1_addr.amphoe)||'' },
+    { id:'addr_province', type:'text', label:'จังหวัด', from:s=>s.province },
+    { id:'addr_zip', type:'text', label:'รหัสไปรษณีย์' },
+    { id:'phone', type:'text', label:'โทรศัพท์' },
+    { id:'fax', type:'text', label:'โทรสาร' },
+    { id:'email', type:'text', label:'อีเมล' },
+    { id:'fund_year', type:'text', label:'รับทุนปีที่' },
+    { id:'academic_year', type:'text', label:'ปีการศึกษา', from:()=>'2568' },
+  ]},
+  { id:'personal', title:'ข้อมูลส่วนตัวนักเรียน', short:'ข้อมูลส่วนตัว', fields:[
+    { id:'full_name', type:'text', label:'ชื่อ - นามสกุล ผู้รับทุนการศึกษา', full:true, from:s=>s.name },
+    { id:'nickname', type:'text', label:'ชื่อเล่น', from:s=>s.nickname },
+    { id:'national_id', type:'text', label:'เลขประจำตัวประชาชน', mono:true, maxlength:13, from:s=>s.id },
+    { id:'dob', type:'date', label:'วัน เดือน ปีเกิด', from:s=>s.dob },
+    { id:'nationality', type:'text', label:'เชื้อชาติ', from:s=>(s.addr&&s.addr.nat)||'ไทย' },
+    { id:'religion', type:'text', label:'ศาสนา', from:s=>(s.addr&&s.addr.rel)||'' },
+    { id:'hometown', type:'text', label:'ภูมิลำเนา (จังหวัด)', from:s=>(s.addr&&s.addr.province)||'' },
+    { id:'cur_addr_no', type:'text', label:'ที่อยู่ปัจจุบัน เลขที่', from:s=>(s.addr&&s.addr.no)||'' },
+    { id:'cur_addr_moo', type:'text', label:'หมู่ที่', from:s=>(s.addr&&s.addr.moo)||'' },
+    { id:'cur_addr_road', type:'text', label:'ถนน' },
+    { id:'cur_addr_tambon', type:'text', label:'ตำบล/แขวง', from:s=>(s.addr&&s.addr.tambon)||'' },
+    { id:'cur_addr_amphoe', type:'text', label:'อำเภอ/เขต', from:s=>(s.addr&&s.addr.amphoe)||'' },
+    { id:'cur_addr_province', type:'text', label:'จังหวัด', from:s=>(s.addr&&s.addr.province)||'' },
+    { id:'cur_addr_zip', type:'text', label:'รหัสไปรษณีย์', from:s=>(s.addr&&s.addr.zip)||'' },
+    { id:'cur_phone', type:'text', label:'โทรศัพท์', from:s=>s.phone },
+    { id:'cur_email', type:'text', label:'อีเมล' },
+    { id:'id_line', type:'text', label:'ID Line' },
+    { id:'live_with', type:'radio', label:'ปัจจุบันอาศัยอยู่กับ', options:['บิดาและมารดา','บิดา','มารดา'], other:true, full:true },
+    { id:'residence_type', type:'radio', label:'ลักษณะของที่อยู่', options:['บ้านส่วนตัว','บ้านเช่า','หอพัก','ห้องเช่า'], other:true, full:true },
+    { id:'travel_method', type:'radio', label:'นักเรียนเดินทางมาสถานศึกษาโดย', options:['รถประจำทาง','จักรยาน','จักรยานยนต์','เดิน'], other:true, full:true },
+    { id:'distance_km', type:'number', label:'ระยะทางจากบ้าน (กิโลเมตร)' },
+    { id:'travel_hour', type:'number', label:'เวลาเดินทาง (ชั่วโมง)' },
+    { id:'travel_min', type:'number', label:'เวลาเดินทาง (นาที)' },
+    { id:'expense_source', type:'text', label:'ได้รับเงินเพื่อเป็นค่าใช้จ่ายจาก', full:true },
+    { id:'expense_amount', type:'number', label:'เป็นเงิน (บาท/วัน)' },
+    { id:'expense_transport', type:'number', label:'ค่าพาหนะเดินทางไป-กลับ (บาท/วัน)' },
+    { id:'expense_food', type:'number', label:'ค่าอาหารเช้า-กลางวัน (บาท/วัน)' },
+    { id:'expense_other', type:'text', label:'ค่าใช้จ่ายอื่น ๆ ระบุ', full:true },
+    { id:'heading_friends', type:'heading', text:'เพื่อนในสถานศึกษาที่สนิทมากที่สุด' },
+    { id:'friends_school', type:'table', full:true, seedRows:2, columns:[
+      {id:'name',label:'ชื่อ - นามสกุล',type:'text'},{id:'class',label:'ชั้น',type:'text'},
+      {id:'room',label:'ห้อง',type:'text'},{id:'phone',label:'โทรศัพท์',type:'text'},{id:'reason',label:'เหตุผล',type:'text'}
+    ]},
+    { id:'heading_neighbor', type:'heading', text:'เพื่อนที่อยู่บ้านใกล้เคียงกับนักเรียนมากที่สุด' },
+    { id:'friend_neighbor', type:'table', full:true, seedRows:1, columns:[
+      {id:'name',label:'ชื่อ - นามสกุล',type:'text'},{id:'class',label:'ชั้น',type:'text'},
+      {id:'room',label:'ห้อง',type:'text'},{id:'phone',label:'โทรศัพท์',type:'text'}
+    ]},
+    { id:'expect_education', type:'textarea', label:'ทุนนี้เป็นทุนต่อเนื่องจนจบปริญญาตรี นักเรียนมีความคาดหวังด้านการศึกษาอย่างไร', full:true },
+    { id:'expect_career', type:'textarea', label:'ความคาดหวังด้านอาชีพในอนาคต', full:true },
+    { id:'heading_pride', type:'heading', text:'ความภาคภูมิใจและความต้องการพัฒนาตนเอง' },
+    { id:'pride_table', type:'table', full:true, seedRows:1, columns:[
+      {id:'level',label:'ระดับชั้น/ปี',type:'text'},{id:'pride',label:'ความภาคภูมิใจในตนเอง',type:'text'},
+      {id:'develop',label:'ความต้องการพัฒนาตนเอง',type:'text'},{id:'help',label:'ความต้องการให้ครู/สถานศึกษาช่วยเหลือ',type:'text'}
+    ]},
+  ]},
+  { id:'health', title:'ข้อมูลด้านสุขภาพ', short:'สุขภาพ', fields:[
+    { id:'blood_type', type:'text', label:'หมู่โลหิต' },
+    { id:'visible_mark', type:'text', label:'มีตำหนิที่เห็นชัดเจน คือ', full:true },
+    { id:'chronic_disease', type:'text', label:'โรคประจำตัว' },
+    { id:'treatment', type:'text', label:'การรักษาพยาบาลเบื้องต้น' },
+    { id:'allergy', type:'text', label:'แพ้ยา' },
+    { id:'regular_medicine', type:'text', label:'ยาที่ใช้ประจำ' },
+    { id:'eyesight', type:'checkboxgroup', label:'สายตา', options:['ปกติ','สายตาสั้น','สายตายาว','สายตาเอียง'], other:true, full:true },
+    { id:'impairment', type:'radio', label:'ความบกพร่องทางร่างกาย', options:['ไม่มี','มี'], full:true },
+    { id:'impairment_detail', type:'text', label:'ระบุความบกพร่องทางร่างกาย', full:true, showIf:{field:'impairment',equals:'มี'} },
+    { id:'serious_illness', type:'textarea', label:'เคยป่วยหนักหรือประสบอุบัติเหตุร้ายแรงถึงขั้นเข้านอนโรงพยาบาล คือ', full:true },
+    { id:'illness_year', type:'text', label:'เมื่อ พ.ศ.' },
+  ]},
+  { id:'family', title:'ข้อมูลด้านครอบครัว', short:'ครอบครัว', fields:[
+    { id:'heading_father', type:'heading', text:'บิดา' },
+    { id:'father_name', type:'text', label:'ชื่อ' }, { id:'father_surname', type:'text', label:'นามสกุล' },
+    { id:'father_id', type:'text', label:'เลขประจำตัวประชาชน', mono:true, maxlength:13 },
+    { id:'father_age', type:'number', label:'อายุ (ปี)' }, { id:'father_education', type:'text', label:'การศึกษา' },
+    { id:'father_occupation', type:'text', label:'อาชีพ' }, { id:'father_income', type:'number', label:'รายได้ต่อปี (บาท)' },
+    { id:'father_workplace', type:'text', label:'ที่อยู่หรือที่ทำงาน', full:true }, { id:'father_phone', type:'text', label:'โทรศัพท์' },
+    { id:'heading_mother', type:'heading', text:'มารดา' },
+    { id:'mother_name', type:'text', label:'ชื่อ' }, { id:'mother_surname', type:'text', label:'นามสกุล' },
+    { id:'mother_id', type:'text', label:'เลขประจำตัวประชาชน', mono:true, maxlength:13 },
+    { id:'mother_age', type:'number', label:'อายุ (ปี)' }, { id:'mother_education', type:'text', label:'การศึกษา' },
+    { id:'mother_occupation', type:'text', label:'อาชีพ' }, { id:'mother_income', type:'number', label:'รายได้ต่อปี (บาท)' },
+    { id:'mother_workplace', type:'text', label:'ที่อยู่หรือที่ทำงาน', full:true }, { id:'mother_phone', type:'text', label:'โทรศัพท์' },
+    { id:'heading_guardian', type:'heading', text:'ผู้ปกครอง' },
+    { id:'guardian_name', type:'text', label:'ชื่อ' }, { id:'guardian_surname', type:'text', label:'นามสกุล' },
+    { id:'guardian_id', type:'text', label:'เลขประจำตัวประชาชน', mono:true, maxlength:13 },
+    { id:'guardian_age', type:'number', label:'อายุ (ปี)' }, { id:'guardian_education', type:'text', label:'การศึกษา' },
+    { id:'guardian_occupation', type:'text', label:'อาชีพ' }, { id:'guardian_income', type:'number', label:'รายได้ต่อปี (บาท)' },
+    { id:'guardian_workplace', type:'text', label:'ที่อยู่หรือที่ทำงาน', full:true }, { id:'guardian_phone', type:'text', label:'โทรศัพท์' },
+    { id:'guardian_type', type:'radio', label:'ผู้ปกครอง คือ', options:['บิดา','มารดา'], other:true, otherLabel:'ผู้อื่นซึ่งเกี่ยวข้องเป็น', full:true },
+    { id:'parents_status', type:'radio', label:'ปัจจุบันบิดามารดา', options:['อยู่ด้วยกัน','หย่าร้าง','แยกกันอยู่','บิดาถึงแก่กรรม','มารดาถึงแก่กรรม'], other:true, full:true },
+    { id:'family_debt', type:'radio', label:'ภาระหนี้สินของครอบครัว', options:['ไม่มี','มี'], full:true },
+    { id:'family_debt_amount', type:'number', label:'จำนวนหนี้สิน (บาท)', showIf:{field:'family_debt',equals:'มี'} },
+    { id:'family_members', type:'number', label:'ครอบครัวของนักเรียนมีสมาชิกทั้งหมด (คน)' },
+    { id:'siblings_total', type:'number', label:'นักเรียนมีพี่น้องทั้งหมด (คน)' },
+    { id:'heading_siblings', type:'heading', text:'พี่น้องร่วมบิดามารดาเดียวกัน เรียงลำดับ' },
+    { id:'siblings_table', type:'table', full:true, seedRows:1, columns:[
+      {id:'name',label:'ชื่อ - สกุล',type:'text'},{id:'age',label:'อายุ',type:'text'},{id:'education',label:'การศึกษา',type:'text'},
+      {id:'occupation',label:'อาชีพ/ตำแหน่ง',type:'text'},{id:'income',label:'รายได้ต่อเดือน',type:'text'},
+      {id:'workplace',label:'สถานศึกษา/ที่ทำงาน',type:'text'},{id:'status',label:'สถานภาพ (โสด/แต่งงาน/อื่นๆ)',type:'text'}
+    ]},
+  ]},
+  { id:'relations', title:'ความสัมพันธ์ในครอบครัว', short:'ความสัมพันธ์', fields:[
+    { id:'trusted_name', type:'text', label:'บุคคลในครอบครัวที่นักเรียนไว้ใจมากที่สุด ชื่อ-นามสกุล', full:true },
+    { id:'trusted_age', type:'number', label:'อายุ (ปี)' }, { id:'trusted_relation', type:'text', label:'เกี่ยวข้องเป็น' },
+    { id:'trusted_phone', type:'text', label:'โทรศัพท์' },
+    { id:'parents_relationship', type:'radio', label:'ความสัมพันธ์ในครอบครัวระหว่างบิดา-มารดา', full:true,
+      options:['รักใคร่กันดี','ขัดแย้งทะเลาะกันบางครั้ง','ขัดแย้งทะเลาะกันบ่อยครั้ง','ขัดแย้งและทำร้ายร่างกายบางครั้ง','ขัดแย้งและทำร้ายร่างกายบ่อยครั้ง'], other:true },
+    { id:'substance_abuse', type:'radio', label:'บุคคลในครอบครัวมีการใช้สารเสพติด', options:['ไม่มี','มี'], full:true },
+    { id:'substance_relation', type:'text', label:'เกี่ยวข้องเป็น...กับนักเรียน', showIf:{field:'substance_abuse',equals:'มี'} },
+    { id:'travel_map_note', type:'textarea', label:'แผนที่แสดงการเดินทางจากสถานศึกษาไปบ้าน (โดยสังเขป) — บันทึกคำอธิบายเส้นทาง', full:true },
+    { id:'note_photo', type:'note', text:'โปรดแนบรูปถ่ายบ้านผู้รับทุนการศึกษาแยกต่างหากเมื่อจัดพิมพ์เอกสารฉบับจริง' },
+  ]},
+  { id:'study', title:'ข้อมูลด้านการเรียนและความสามารถ', short:'การเรียน', fields:[
+    { id:'heading_edu_history', type:'heading', text:'ประวัติการศึกษา' },
+    { id:'education_history', type:'table', full:true,
+      seedRowsData:[{level:'ประถมศึกษา'},{level:'มัธยมศึกษาตอนต้น'},{level:'มัธยมศึกษาตอนปลาย'}],
+      columns:[{id:'level',label:'ระดับการศึกษา',type:'text'},{id:'school',label:'สถานศึกษา',type:'text'},{id:'province',label:'จังหวัด',type:'text'}] },
+    { id:'note_edu', type:'note', text:'กรณีเรียนระดับชั้นสูงกว่าหรือเทียบเท่า ให้ปรับแก้ไขเพื่อกรอกข้อมูลตามความเหมาะสม' },
+    { id:'study_plan', type:'table', full:true, seedRows:1, columns:[
+      {id:'level',label:'ระดับชั้น/ปี',type:'text'},{id:'track',label:'แผนการเรียน/แผนก/สาขาวิชา',type:'text'},{id:'advisor',label:'ครูที่ปรึกษาหรือครูผู้ดูแล',type:'text'}
+    ]},
+    { id:'heading_grades', type:'heading', text:'ข้อมูลผลการเรียน (ในสถานศึกษาปัจจุบัน)' },
+    { id:'grades_matrix', type:'matrix', full:true, defaultCols:2, rows:[
+      {id:'term1',label:'ภาคเรียนที่ 1'},{id:'term2',label:'ภาคเรียนที่ 2'},{id:'avg',label:'คะแนนเฉลี่ย'},{id:'cumavg',label:'คะแนนเฉลี่ยสะสม'}
+    ]},
+    { id:'special_ability', type:'textarea', label:'ความสามารถพิเศษ', full:true },
+    { id:'achievement', type:'textarea', label:'ผลงานดีเด่นและความภาคภูมิใจในปีที่ผ่านมา', full:true },
+  ]},
+  { id:'support', title:'การดูแลช่วยเหลือที่สถานศึกษาดำเนินการ', short:'การช่วยเหลือ', fields:[
+    { id:'heading_scholar', type:'heading', text:'ทุนการศึกษาอื่นที่ได้รับ' },
+    { id:'other_scholarships', type:'table', full:true, seedRows:1, columns:[
+      {id:'name',label:'ชื่อทุน',type:'text'},{id:'amount',label:'จำนวนเงิน (บาท)',type:'text'},{id:'year',label:'เมื่อปี พ.ศ.',type:'text'}
+    ]},
+    { id:'heading_income', type:'heading', text:'การหารายได้ระหว่างเรียน' },
+    { id:'part_time_income', type:'table', full:true, seedRows:1, columns:[{id:'detail',label:'รายละเอียด',type:'text'}] },
+    { id:'heading_tutoring', type:'heading', text:'การได้รับการสอนเสริมพิเศษ' },
+    { id:'extra_tutoring', type:'table', full:true, seedRows:1, columns:[
+      {id:'subject',label:'วิชา',type:'text'},{id:'time',label:'ช่วงเวลา',type:'text'},{id:'teacher',label:'ผู้สอน คือ',type:'text'}
+    ]},
+    { id:'other_support', type:'checkboxgroup', label:'อื่น ๆ (ตอบได้มากกว่า 1 ข้อ)', full:true, other:true,
+      options:['จัดที่พัก','จัดรถรับส่ง','จัดอาหารกลางวัน','สนับสนุนอุปกรณ์การเรียน'] },
+  ]},
+  { id:'needs', title:'ความต้องการเพิ่มเติมและกิจกรรม', short:'ความต้องการ', fields:[
+    { id:'heading_needs', type:'heading', text:'ความต้องการในการได้รับความช่วยเหลือเพิ่มเติม' },
+    { id:'additional_needs', type:'table', full:true, seedRows:1, columns:[{id:'detail',label:'รายละเอียด',type:'text'}] },
+    { id:'heading_loyalty', type:'heading', text:'การเข้าร่วมกิจกรรมที่แสดงถึงความสำนึกในพระมหากรุณาธิคุณ' },
+    { id:'loyalty_activities', type:'table', full:true, seedRows:1, columns:[{id:'detail',label:'รายละเอียด',type:'text'}] },
+  ]},
+  { id:'finance', title:'การเงินและการรับรอง', short:'การเงิน', fields:[
+    { id:'bank_name', type:'text', label:'บัญชีธนาคาร', from:s=>(s.bank&&s.bank.bankSt)||'' },
+    { id:'bank_branch', type:'text', label:'สาขา', from:s=>(s.bank&&s.bank.branchSt)||'' },
+    { id:'account_name', type:'text', label:'ชื่อบัญชี', from:s=>(s.bank&&s.bank.accNameSt)||'' },
+    { id:'account_no', type:'text', label:'เลขที่บัญชี', mono:true, from:s=>(s.bank&&s.bank.accNoSt)||'' },
+    { id:'signer1', type:'text', label:'ผู้มีอำนาจสั่งจ่าย คนที่ 1' }, { id:'signer2', type:'text', label:'ผู้มีอำนาจสั่งจ่าย คนที่ 2' },
+    { id:'heading_receipts', type:'heading', text:'การรับเงินทุนการศึกษาและค่าใช้จ่าย' },
+    { id:'receipts', type:'table', full:true, seedRows:1, columns:[
+      {id:'no',label:'ครั้งที่',type:'text'},{id:'date',label:'วันที่ได้รับ',type:'text'},{id:'amount',label:'จำนวนเงิน',type:'text'},
+      {id:'part1',label:'ส่วนที่ 1 สถานศึกษาเรียกเก็บ',type:'text'},{id:'part2',label:'ส่วนที่ 2 ค่าครองชีพ',type:'text'},{id:'part3',label:'ส่วนที่ 3 กรณีพิเศษเฉพาะราย',type:'text'}
+    ]},
+    { id:'student_sign_date', type:'date', label:'วันที่ลงนามผู้รับทุนการศึกษา' },
+    { id:'heading_teacher', type:'heading', text:'ครูที่ปรึกษาหรือครูผู้ดูแล บันทึกความคิดเห็นเพิ่มเติม' },
+    { id:'teacher_comment_study', type:'textarea', label:'ด้านการเรียน', full:true },
+    { id:'teacher_comment_behavior', type:'textarea', label:'ด้านความประพฤติ', full:true },
+    { id:'teacher_comment_other', type:'textarea', label:'ด้านอื่น ๆ', full:true },
+    { id:'teacher_name', type:'text', label:'ชื่อครูที่ปรึกษาหรือครูผู้ดูแล', from:s=>[s.mentor&&s.mentor.firstName,s.mentor&&s.mentor.lastName].filter(Boolean).join(' ') },
+    { id:'teacher_position', type:'text', label:'ตำแหน่ง', from:s=>(s.mentor&&s.mentor.position)||'' },
+    { id:'teacher_school', type:'text', label:'สถานศึกษา', from:s=>s.school_m1 },
+    { id:'teacher_phone', type:'text', label:'เบอร์โทรศัพท์', from:s=>(s.mentor&&s.mentor.phone)||'' },
+    { id:'teacher_sign_date', type:'date', label:'วันที่ลงนาม' },
+  ]},
+];
+
+const SF_FORM2 = [
+  { id:'general', title:'ข้อมูลทั่วไป', short:'ข้อมูลทั่วไป', fields:[
+    { id:'semester', type:'text', label:'ภาคเรียนที่' },
+    { id:'academic_year', type:'text', label:'ปีการศึกษา', from:()=>'2568' },
+    { id:'prefix', type:'radio', label:'คำนำหน้า', options:['เด็กชาย','เด็กหญิง','นาย','นางสาว'] },
+    { id:'first_name', type:'text', label:'ชื่อ' }, { id:'last_name', type:'text', label:'นามสกุล' },
+    { id:'nickname', type:'text', label:'ชื่อเล่น', from:s=>s.nickname },
+    { id:'national_id', type:'text', label:'เลขประจำตัวประชาชน', mono:true, maxlength:13, from:s=>s.id },
+    { id:'dob', type:'date', label:'วัน เดือน ปีเกิด', from:s=>s.dob },
+    { id:'school_name', type:'text', label:'สถานศึกษา', full:true, from:s=>s.school_m1 },
+    { id:'amphoe', type:'text', label:'อำเภอ', from:s=>(s.school_m1_addr&&s.school_m1_addr.amphoe)||'' },
+    { id:'province', type:'text', label:'จังหวัด', from:s=>s.province },
+    { id:'sangkad', type:'text', label:'สังกัด', from:s=>s.org },
+    { id:'grade_level', type:'text', label:'ระดับชั้น' }, { id:'track', type:'text', label:'แผน/แผนก/สาขา' },
+  ]},
+  { id:'grades', title:'ผลการเรียน', short:'ผลการเรียน', fields:[
+    { id:'grades_matrix', type:'matrix', full:true, defaultCols:2, rows:[
+      {id:'term1',label:'ภาคเรียนที่ 1'},{id:'term2',label:'ภาคเรียนที่ 2'},{id:'avg2',label:'คะแนนเฉลี่ย 2 ภาคเรียน'},{id:'cumavg',label:'คะแนนเฉลี่ยสะสม'}
+    ]},
+    { id:'learning_problems', type:'textarea', label:'ปัญหาอุปสรรคที่ส่งผลต่อการเรียนที่เป็นสาเหตุให้มีคะแนนผลการเรียนลดลง', full:true },
+    { id:'current_help', type:'textarea', label:'ปัจจุบันได้รับความช่วยเหลือจากโรงเรียนด้าน', full:true },
+  ]},
+  { id:'assistance', title:'การดูแลช่วยเหลือ ความต้องการ และความคาดหวัง', short:'ช่วยเหลือ/คาดหวัง', fields:[
+    { id:'heading_tutor', type:'heading', text:'จัดสอนเสริมพิเศษ' },
+    { id:'tutoring', type:'table', full:true, seedRows:1, columns:[
+      {id:'subject',label:'วิชา',type:'text'},{id:'time',label:'ช่วงเวลา',type:'text'},{id:'teacher',label:'ผู้สอน คือ',type:'text'}
+    ]},
+    { id:'heading_fund', type:'heading', text:'จัดหาเงินทุนจากแหล่งอื่นเพิ่มเติม' },
+    { id:'extra_funding', type:'table', full:true, seedRows:1, columns:[{id:'source',label:'แหล่งทุน',type:'text'},{id:'amount',label:'จำนวนเงิน',type:'text'}] },
+    { id:'support_other', type:'checkboxgroup', label:'การดูแลช่วยเหลืออื่น ๆ (เลือกได้มากกว่า 1 ข้อ)', full:true, other:true,
+      options:['จัดอาหารกลางวัน','จัดที่พักในสถานศึกษา','จัดบริการรถรับส่ง','จัดให้หารายได้ระหว่างเรียน'] },
+    { id:'additional_needs', type:'textarea', label:'ความต้องการในการได้รับความช่วยเหลือเพิ่มเติม จากสถานศึกษา ครู หรืออื่น ๆ', full:true },
+    { id:'expect_education', type:'textarea', label:'ความคาดหวังด้านการศึกษา', full:true },
+    { id:'expect_career', type:'textarea', label:'ความคาดหวังด้านอาชีพในอนาคต', full:true },
+    { id:'achievement', type:'textarea', label:'ผลงานดีเด่น ความภาคภูมิใจในปีที่ผ่านมา', full:true },
+  ]},
+  { id:'behavior', title:'ข้อมูลความประพฤติ', short:'ความประพฤติ', fields:[
+    { id:'activities_participation', type:'textarea', label:'การเข้าร่วมกิจกรรมต่าง ๆ ของสถานศึกษาในภาคเรียนปัจจุบัน', full:true },
+    { id:'family_responsibility', type:'textarea', label:'งานที่ต้องรับผิดชอบดูแลช่วยเหลือครอบครัวในด้านต่าง ๆ', full:true },
+    { id:'community_loyalty', type:'textarea', label:'การมีส่วนร่วมในกิจกรรมที่เป็นประโยชน์ต่อชุมชนและสังคม ตลอดจนความจงรักภักดีต่อสถาบันพระมหากษัตริย์', full:true },
+  ]},
+  { id:'finance', title:'การเงินและการรับรอง', short:'การเงิน', fields:[
+    { id:'bank_name', type:'text', label:'บัญชีธนาคาร', from:s=>(s.bank&&s.bank.bankSt)||'' },
+    { id:'bank_branch', type:'text', label:'สาขา', from:s=>(s.bank&&s.bank.branchSt)||'' },
+    { id:'account_name', type:'text', label:'ชื่อบัญชี', from:s=>(s.bank&&s.bank.accNameSt)||'' },
+    { id:'account_no', type:'text', label:'เลขที่บัญชี', mono:true, from:s=>(s.bank&&s.bank.accNoSt)||'' },
+    { id:'signer1', type:'text', label:'ผู้มีอำนาจสั่งจ่าย คนที่ 1' }, { id:'signer2', type:'text', label:'ผู้มีอำนาจสั่งจ่าย คนที่ 2' },
+    { id:'heading_receipts', type:'heading', text:'รายงานการรับเงินทุนการศึกษาและการใช้จ่าย' },
+    { id:'receipts', type:'table', full:true, seedRows:1, columns:[
+      {id:'no',label:'ครั้งที่',type:'text'},{id:'date',label:'วันที่ได้รับ',type:'text'},{id:'amount',label:'จำนวนเงิน',type:'text'},
+      {id:'part1',label:'ส่วนที่ 1 สถานศึกษาเรียกเก็บ',type:'text'},{id:'part2',label:'ส่วนที่ 2 ค่าครองชีพ',type:'text'},{id:'part3',label:'ส่วนที่ 3 กรณีพิเศษเฉพาะราย',type:'text'}
+    ]},
+    { id:'heading_summary', type:'heading', text:'สรุปยอดเงินทุนการศึกษา' },
+    { id:'total_received', type:'number', label:'ได้รับเงินทุนรวมทั้งสิ้น (บาท)' },
+    { id:'total_disbursed', type:'number', label:'เบิกจ่ายไปแล้วรวมทั้งสิ้น (บาท)' },
+    { id:'part1_amount', type:'number', label:'ส่วนที่ 1 ค่าใช้จ่ายที่สถานศึกษาเรียกเก็บ (บาท)' },
+    { id:'part2_amount', type:'number', label:'ส่วนที่ 2 ค่าใช้จ่ายครองชีพประจำตัว (บาท)' },
+    { id:'part3_amount', type:'number', label:'ส่วนที่ 3 ค่าใช้จ่ายกรณีพิเศษเฉพาะราย (บาท)' },
+    { id:'balance', type:'number', label:'ยอดคงเหลือ (บาท)' },
+    { id:'balance_date', type:'date', label:'ยอดคงเหลือ ณ วันที่' },
+    { id:'student_sign_date', type:'date', label:'วันที่ลงนามผู้รับทุนการศึกษา' },
+    { id:'heading_teacher', type:'heading', text:'ข้อคิดเห็นเพิ่มเติมของครูที่ปรึกษาหรือครูผู้ดูแล' },
+    { id:'teacher_comment_study', type:'textarea', label:'ด้านการเรียนของผู้รับทุนการศึกษา', full:true },
+    { id:'teacher_comment_behavior', type:'textarea', label:'ด้านความประพฤติและการปฏิบัติตน', full:true },
+    { id:'teacher_comment_expense', type:'textarea', label:'การรับรองและข้อคิดเห็นเพิ่มเติมในการใช้จ่ายเงินทุนการศึกษา', full:true },
+    { id:'teacher_name', type:'text', label:'ชื่อครูที่ปรึกษาหรือครูผู้ดูแล', from:s=>[s.mentor&&s.mentor.firstName,s.mentor&&s.mentor.lastName].filter(Boolean).join(' ') },
+    { id:'teacher_position', type:'text', label:'ตำแหน่ง', from:s=>(s.mentor&&s.mentor.position)||'' },
+    { id:'teacher_phone', type:'text', label:'โทรศัพท์', from:s=>(s.mentor&&s.mentor.phone)||'' },
+    { id:'teacher_sign_date', type:'date', label:'วันที่ลงนามครู' },
+    { id:'director_name', type:'text', label:'ชื่อผู้อำนวยการสถานศึกษา' },
+    { id:'director_sign_date', type:'date', label:'วันที่ลงนามผู้อำนวยการ' },
+  ]},
+];
+
+
+/* ---------- Data access (stored on student.form1 / student.form2) ---------- */
+function sfGetStudent(){ return DB.students[sfState.studentIdx]; }
+function sfEnsureFormStore(student){
+  if(!student.form1) student.form1 = {};
+  if(!student.form2) student.form2 = {};
+}
+function sfGetValue(formKey, fieldId, field){
+  const student = sfGetStudent();
+  sfEnsureFormStore(student);
+  const store = student[formKey];
+  if(store[fieldId]!==undefined) return store[fieldId];
+  let def;
+  if(field.type==='radio') def = {choice:'', other:''};
+  else if(field.type==='checkboxgroup') def = {selected:[], other:''};
+  else if(field.type==='table'){
+    if(field.seedRowsData) def = field.seedRowsData.map(r=>({_id:sfUid(), cells:Object.assign({},r)}));
+    else def = Array.from({length:field.seedRows||0}).map(()=>({_id:sfUid(), cells:{}}));
+  } else if(field.type==='matrix'){
+    const cols = Array.from({length:field.defaultCols||2}).map(()=>({_id:sfUid(), label:''}));
+    def = {cols, values:{}};
+  } else if(field.from){
+    def = field.from(student) || '';
+  } else def = '';
+  store[fieldId] = def;
+  return def;
+}
+function sfSetSimpleValue(formKey, fieldId, value){
+  const student = sfGetStudent(); sfEnsureFormStore(student);
+  student[formKey][fieldId] = value;
+}
+
+/* ---------- Progress ---------- */
+function sfSectionProgress(formKey, section){
+  let total=0, filled=0;
+  section.fields.forEach(f=>{
+    if(f.type==='heading'||f.type==='note') return;
+    total++;
+    const v = sfGetValue(formKey, f.id, f);
+    if(f.type==='radio'){ if(v.choice) filled++; }
+    else if(f.type==='checkboxgroup'){ if(v.selected.length||v.other) filled++; }
+    else if(f.type==='table'||f.type==='matrix'){ filled++; total--; }
+    else if(v!==''&&v!==null&&v!==undefined) filled++;
+  });
+  return total===0?1:filled/total;
+}
+
+/* ---------- Field renderers ---------- */
+function sfRenderField(formKey, field){
+  if(field.showIf){
+    const dep = sfGetValue(formKey, field.showIf.field, {type:'radio'});
+    const depChoice = (dep&&typeof dep==='object') ? dep.choice : dep;
+    if(depChoice!==field.showIf.equals) return '';
+  }
+  if(field.type==='heading') return `<div class="sf-heading ${field.full?'full':''}">${sfEscapeHtml(field.text)}</div>`;
+  if(field.type==='note') return `<div class="sf-note ${field.full?'full':''}">${sfEscapeHtml(field.text)}</div>`;
+
+  const value = sfGetValue(formKey, field.id, field);
+  const wrapClass = 'sf-item'+(field.full?' full':'');
+
+  if(field.type==='text'||field.type==='number'||field.type==='date'){
+    return `<label class="${wrapClass}"><span class="sf-label">${sfEscapeHtml(field.label)}</span>
+      <input class="sf-input ${field.mono?'mono':''}" type="${field.type}" data-sf-field="${field.id}"
+        ${field.maxlength?`maxlength="${field.maxlength}"`:''} value="${sfEscapeHtml(value)}" placeholder=" "></label>`;
+  }
+  if(field.type==='textarea'){
+    return `<label class="${wrapClass}"><span class="sf-label">${sfEscapeHtml(field.label)}</span>
+      <textarea class="sf-input sf-textarea" data-sf-field="${field.id}" rows="3" placeholder=" ">${sfEscapeHtml(value)}</textarea></label>`;
+  }
+  if(field.type==='radio'){
+    const opts = field.options.map(opt=>`
+      <label class="sf-choice"><input type="radio" name="sfrad-${formKey}-${field.id}" data-sf-field="${field.id}" data-sf-choice="${sfEscapeHtml(opt)}" ${value.choice===opt?'checked':''}><span>${sfEscapeHtml(opt)}</span></label>`).join('');
+    const otherRow = field.other ? `
+      <label class="sf-choice sf-choice-other"><input type="radio" name="sfrad-${formKey}-${field.id}" data-sf-field="${field.id}" data-sf-choice="__other__" ${value.choice==='__other__'?'checked':''}>
+      <span>${sfEscapeHtml(field.otherLabel||'อื่น ๆ ระบุ')}</span>
+      <input type="text" class="sf-input sf-other-input" data-sf-field="${field.id}" data-sf-other="1" value="${sfEscapeHtml(value.other)}" ${value.choice==='__other__'?'':'disabled'}></label>` : '';
+    return `<div class="${wrapClass}"><span class="sf-label">${sfEscapeHtml(field.label)}</span><div class="sf-choices">${opts}${otherRow}</div></div>`;
+  }
+  if(field.type==='checkboxgroup'){
+    const sel = value.selected||[];
+    const opts = field.options.map(opt=>`
+      <label class="sf-choice"><input type="checkbox" data-sf-field="${field.id}" data-sf-cbvalue="${sfEscapeHtml(opt)}" ${sel.indexOf(opt)>-1?'checked':''}><span>${sfEscapeHtml(opt)}</span></label>`).join('');
+    const otherRow = field.other ? `
+      <label class="sf-choice sf-choice-other"><input type="checkbox" data-sf-field="${field.id}" data-sf-cbother="1" ${sel.indexOf('__other__')>-1?'checked':''}>
+      <span>อื่น ๆ ระบุ</span>
+      <input type="text" class="sf-input sf-other-input" data-sf-field="${field.id}" data-sf-other="1" value="${sfEscapeHtml(value.other)}" ${sel.indexOf('__other__')>-1?'':'disabled'}></label>` : '';
+    return `<div class="${wrapClass}"><span class="sf-label">${sfEscapeHtml(field.label)}</span><div class="sf-choices">${opts}${otherRow}</div></div>`;
+  }
+  if(field.type==='table') return `<div class="${wrapClass}">${sfRenderTable(formKey, field)}</div>`;
+  if(field.type==='matrix') return `<div class="${wrapClass}">${sfRenderMatrix(formKey, field)}</div>`;
+  return '';
+}
+
+function sfRenderTable(formKey, field){
+  const rows = sfGetValue(formKey, field.id, field);
+  const thead = field.columns.map(c=>`<th>${sfEscapeHtml(c.label)}</th>`).join('')+'<th class="sf-th-x"></th>';
+  const trs = rows.map(row=>{
+    const tds = field.columns.map(c=>{
+      const v = (row.cells&&row.cells[c.id])||'';
+      return `<td><input class="sf-input sf-cell-input" type="text" data-sf-table="${field.id}" data-sf-row="${row._id}" data-sf-col="${c.id}" value="${sfEscapeHtml(v)}"></td>`;
+    }).join('');
+    return `<tr>${tds}<td class="sf-td-x"><button type="button" class="sf-btn-icon" data-sf-action="del-row" data-sf-table="${field.id}" data-sf-row="${row._id}" title="ลบแถว">✕</button></td></tr>`;
+  }).join('');
+  return `<div class="sf-table-wrap" id="sf-table-${field.id}">
+    <table class="sf-data-table"><thead><tr>${thead}</tr></thead><tbody>${trs}</tbody></table>
+    <button type="button" class="sf-btn-add" data-sf-action="add-row" data-sf-table="${field.id}">+ เพิ่มแถว</button></div>`;
+}
+
+function sfRenderMatrix(formKey, field){
+  const value = sfGetValue(formKey, field.id, field);
+  const cols = value.cols;
+  const thead = `<th class="sf-th-rowlabel">ภาคเรียน</th>` + cols.map(c=>`<th><input class="sf-input sf-col-head" type="text" data-sf-matrix="${field.id}" data-sf-colhead="${c._id}" value="${sfEscapeHtml(c.label)}" placeholder="ระดับชั้น/ปี"></th>`).join('') + `<th class="sf-th-x"></th>`;
+  const trs = field.rows.map(r=>{
+    const tds = cols.map(c=>{
+      const v = (value.values[r.id]&&value.values[r.id][c._id])||'';
+      return `<td><input class="sf-input sf-cell-input" type="text" data-sf-matrix="${field.id}" data-sf-mrow="${r.id}" data-sf-mcol="${c._id}" value="${sfEscapeHtml(v)}"></td>`;
+    }).join('');
+    return `<tr><td class="sf-td-rowlabel">${sfEscapeHtml(r.label)}</td>${tds}<td></td></tr>`;
+  }).join('');
+  return `<div class="sf-table-wrap" id="sf-matrix-${field.id}">
+    <table class="sf-data-table"><thead><tr>${thead}</tr></thead><tbody>${trs}</tbody></table>
+    <button type="button" class="sf-btn-add" data-sf-action="add-col" data-sf-matrix="${field.id}">+ เพิ่มคอลัมน์ระดับชั้น/ปี</button></div>`;
+}
+
+/* ---------- Section / stepper / editor ---------- */
+function sfRenderSectionContent(formKey, idx){
+  const section = sfGetSections(formKey)[idx];
+  const fieldsHtml = section.fields.map(f=>sfRenderField(formKey,f)).join('');
+  const dirClass = sfState.lastDir==='prev' ? 'sf-dir-prev' : sfState.lastDir==='jump' ? 'sf-dir-jump' : '';
+  return `<div class="sf-section-card ${dirClass}">
+    <div class="sf-section-head"><span class="sf-section-num">${idx+1}</span><h2>${sfEscapeHtml(section.title)}</h2></div>
+    <div class="sf-grid">${fieldsHtml}</div></div>`;
+}
+
+function sfRenderStepper(formKey){
+  const sections = sfGetSections(formKey);
+  const dots = sections.map((s,i)=>{
+    const prog = sfSectionProgress(formKey,s);
+    let cls = 'sf-step';
+    if(i===sfState.sectionIndex) cls+=' active'; else if(prog>=0.999) cls+=' complete';
+    return `<button type="button" class="${cls}" data-sf-action="go-section" data-sf-idx="${i}" title="${sfEscapeHtml(s.title)}">
+      <span class="sf-step-num">${i+1}</span><span class="sf-step-label">${sfEscapeHtml(s.short)}</span></button>`;
+  }).join('<span class="sf-step-seg"></span>');
+  const pct = Math.round((sfState.sectionIndex/(sections.length-1))*100);
+  return `<div class="sf-stepper-wrap"><div class="sf-stepper-track"><div class="sf-stepper-fill" style="width:${pct}%"></div></div>
+    <div class="sf-stepper-steps">${dots}</div></div>`;
+}
+
+function sfRenderEditor(){
+  const student = sfGetStudent();
+  const sections = sfGetSections(sfState.formKey);
+  const isFirst = sfState.sectionIndex===0, isLast = sfState.sectionIndex===sections.length-1;
+  const saveLabel = sfState.saveStatus==='saving'?'กำลังบันทึก…':sfState.saveStatus==='saved'?'บันทึกแล้ว':'พร้อมบันทึกอัตโนมัติ';
+  return `<div class="sf-editor">
+    <div class="sf-editor-top">
+      <div class="sf-editor-top-left">
+        <button type="button" class="sf-btn sf-btn-ghost" data-sf-action="go-picker">← รายชื่อนักเรียน</button>
+        <div class="sf-student-chip"><span class="sf-student-chip-name">${sfEscapeHtml(student.name||'(ยังไม่ระบุชื่อ)')}</span>
+        <span class="sf-student-chip-id">${sfEscapeHtml(student.id||'')}</span></div>
+      </div>
+      <div class="sf-editor-top-right">
+        <span class="sf-save-status ${sfState.saveStatus}">${saveLabel}</span>
+        <button type="button" class="sf-btn sf-btn-ghost" data-sf-action="send-sheet">☁️ ส่งไป Google Sheet</button>
+        <button type="button" class="sf-btn sf-btn-ghost" data-sf-action="print">👁️ ดูตัวอย่าง / พิมพ์ PDF</button>
+      </div>
+    </div>
+    <div class="sf-tabs">
+      <button type="button" class="sf-tab ${sfState.formKey==='form1'?'active':''}" data-sf-action="switch-form" data-sf-form="form1">แบบฟอร์มที่ 1<span>ข้อมูลรายบุคคล</span></button>
+      <button type="button" class="sf-tab ${sfState.formKey==='form2'?'active':''}" data-sf-action="switch-form" data-sf-form="form2">แบบฟอร์มที่ 2<span>ผลการเรียน/ความประพฤติ/การใช้จ่าย</span></button>
+    </div>
+    ${sfRenderStepper(sfState.formKey)}
+    <main>
+      ${sfRenderSectionContent(sfState.formKey, sfState.sectionIndex)}
+      <div class="sf-section-nav">
+        <button type="button" class="sf-btn sf-btn-secondary" data-sf-action="prev-section" ${isFirst?'disabled':''}>← ย้อนกลับ</button>
+        <span class="sf-section-count">${sfState.sectionIndex+1} / ${sections.length}</span>
+        <button type="button" class="sf-btn sf-btn-primary" data-sf-action="next-section" ${isLast?'disabled':''}>ถัดไป →</button>
+      </div>
+    </main>
+  </div>`;
+}
+
+/* ---------- Picker (student list, reusing DB.students) ---------- */
+function sfFormStatus(student){
+  const has1 = !!(student.form1 && student.form1.__touched);
+  const has2 = !!(student.form2 && student.form2.__touched);
+  return {has1, has2};
+}
+function sfRenderPicker(){
+  const q = (sfState.query||'').trim().toLowerCase();
+  const list = DB.students.map((s,idx)=>({s,idx})).filter(({s})=>{
+    if(!q) return true;
+    return (s.name||'').toLowerCase().includes(q) || (s.school_m1||'').toLowerCase().includes(q) || (s.province||'').toLowerCase().includes(q) || (s.id||'').includes(q);
+  });
+  const cards = list.map(({s,idx}, i)=>{
+    const st = sfFormStatus(s);
+    const initialLetter = (s.name||'?').replace(/^(ด\.ช\.|ด\.ญ\.|นาย|นางสาว|น\.ส\.)/,'').trim().charAt(0)||'?';
+    const delay = Math.min(i,24)*0.02;
+    const orderNo = s.no || (idx+1);
+    const avatarInner = s.photoUrl
+      ? `<img class="sf-card-photo" src="${sfEscapeHtml(typeof fixDriveUrl==='function'?fixDriveUrl(s.photoUrl):s.photoUrl)}" alt="${sfEscapeHtml(s.name||'')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="sf-card-avatar-fallback">${sfEscapeHtml(initialLetter)}</span>`
+      : `<span class="sf-card-avatar-fallback" style="display:flex">${sfEscapeHtml(initialLetter)}</span>`;
+    return `<button type="button" class="sf-card" style="animation-delay:${delay}s" data-sf-action="open-student" data-sf-idx="${idx}">
+      <span class="sf-card-order">${orderNo}</span>
+      <span class="sf-card-avatar">${avatarInner}</span>
+      <span class="sf-card-body">
+        <span class="sf-card-name">${sfEscapeHtml(s.name||'(ไม่ระบุชื่อ)')}</span>
+        <span class="sf-card-meta">${sfEscapeHtml(s.school_m1||'-')} · ${sfEscapeHtml(s.province||'-')}</span>
+        <span class="sf-card-status">
+          <span class="sf-tag ${st.has1?'done':''}">${st.has1?'✓ ':''}แบบฟอร์ม 1</span>
+          <span class="sf-tag ${st.has2?'done':''}">${st.has2?'✓ ':''}แบบฟอร์ม 2</span>
+        </span>
+      </span>
+    </button>`;
+  }).join('');
+  return `<div class="sf-picker">
+    <div class="sf-picker-head">
+      <h2>เลือกนักเรียนเพื่อกรอกแบบฟอร์ม (${list.length})</h2>
+      <input type="text" class="sf-search" placeholder="🔍 ค้นหาชื่อ / โรงเรียน / จังหวัด / เลขบัตรประชาชน" value="${sfEscapeHtml(sfState.query||'')}" data-sf-action="search">
+    </div>
+    ${list.length? `<div class="sf-picker-grid">${cards}</div>` : `
+      <div class="sf-empty"><p>ไม่พบนักเรียนที่ค้นหา</p><span>ลองคำค้นอื่น หรือเพิ่มนักเรียนในหน้า "รายชื่อนักเรียน" ก่อน</span></div>`}
+  </div>`;
+}
+
+/* ---------- Root render ---------- */
+function sfRenderPage(){
+  const root = document.getElementById('sf-root');
+  if(!root) return;
+  if(sfState.studentIdx===null || !DB.students[sfState.studentIdx]){
+    root.innerHTML = sfRenderPicker();
+  } else {
+    root.innerHTML = sfRenderEditor();
+  }
+  sfSetupEventsOnce();
+}
+
+/* ---------- Persistence (reuses the app's own storage) ---------- */
+const _sfDebouncedSave = sfDebounce(function(){
+  sfState.saveStatus='saving';
+  sfUpdateSaveStatusUI();
+  saveToStorage();
+  sfState.saveStatus='saved';
+  sfUpdateSaveStatusUI();
+}, 600);
+function sfPersist(){
+  const student = sfGetStudent();
+  if(student){
+    if(!student[sfState.formKey]) student[sfState.formKey] = {};
+    student[sfState.formKey].__touched = true;
+  }
+  _sfDebouncedSave();
+}
+function sfUpdateSaveStatusUI(){
+  const el = document.querySelector('.sf-save-status');
+  if(!el) return;
+  el.className = 'sf-save-status '+sfState.saveStatus;
+  el.textContent = sfState.saveStatus==='saving'?'กำลังบันทึก…':sfState.saveStatus==='saved'?'บันทึกแล้ว':'พร้อมบันทึกอัตโนมัติ';
+}
+
+/* ---------- Helpers used by event delegation ---------- */
+function sfFindField(formKey, fieldId){
+  for(const s of sfGetSections(formKey)){ const f=s.fields.find(f=>f.id===fieldId); if(f) return f; }
+  return null;
+}
+function sfRerenderTable(fieldId, field){ const el=document.getElementById('sf-table-'+fieldId); if(el) el.outerHTML = sfRenderTable(sfState.formKey, field); }
+function sfRerenderMatrix(fieldId, field){ const el=document.getElementById('sf-matrix-'+fieldId); if(el) el.outerHTML = sfRenderMatrix(sfState.formKey, field); }
+function sfUpdateChipUI(){
+  const el = document.querySelector('.sf-student-chip-name');
+  if(el){ const s=sfGetStudent(); el.textContent = (s&&s.name) || '(ยังไม่ระบุชื่อ)'; }
+}
+
+/* ---------- Event delegation (bound once) ---------- */
+let _sfEventsBound = false;
+function sfSetupEventsOnce(){
+  if(_sfEventsBound) return;
+  _sfEventsBound = true;
+  const root = document.getElementById('sf-root');
+
+  root.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-sf-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-sf-action');
+    if(action==='open-student'){ sfState.studentIdx = parseInt(btn.getAttribute('data-sf-idx'),10); sfState.formKey='form1'; sfState.sectionIndex=0; sfState.lastDir='jump'; sfRenderPage(); }
+    else if(action==='go-picker'){ sfState.studentIdx=null; sfRenderPage(); }
+    else if(action==='switch-form'){ sfState.formKey=btn.getAttribute('data-sf-form'); sfState.sectionIndex=0; sfState.lastDir='jump'; sfRenderPage(); }
+    else if(action==='go-section'){ const target=parseInt(btn.getAttribute('data-sf-idx'),10); sfState.lastDir = target>sfState.sectionIndex?'next':target<sfState.sectionIndex?'prev':'jump'; sfState.sectionIndex=target; sfRenderPage(); }
+    else if(action==='prev-section'){ if(sfState.sectionIndex>0){ sfState.sectionIndex--; sfState.lastDir='prev'; sfRenderPage(); } }
+    else if(action==='next-section'){ const max=sfGetSections(sfState.formKey).length-1; if(sfState.sectionIndex<max){ sfState.sectionIndex++; sfState.lastDir='next'; sfRenderPage(); } }
+    else if(action==='print'){ sfOpenPreview(); }
+    else if(action==='send-sheet'){ sfSendToSheet(btn); }
+    else if(action==='add-row'){
+      const fieldId=btn.getAttribute('data-sf-table'); const field=sfFindField(sfState.formKey,fieldId);
+      const arr = sfGetValue(sfState.formKey, fieldId, field); arr.push({_id:sfUid(), cells:{}});
+      sfRerenderTable(fieldId, field); sfPersist();
+    }
+    else if(action==='del-row'){
+      const fieldId=btn.getAttribute('data-sf-table'); const rowId=btn.getAttribute('data-sf-row'); const field=sfFindField(sfState.formKey,fieldId);
+      let arr = sfGetValue(sfState.formKey, fieldId, field); arr = arr.filter(r=>r._id!==rowId);
+      sfGetStudent()[sfState.formKey][fieldId] = arr;
+      sfRerenderTable(fieldId, field); sfPersist();
+    }
+    else if(action==='add-col'){
+      const fieldId=btn.getAttribute('data-sf-matrix'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field); val.cols.push({_id:sfUid(), label:''});
+      sfRerenderMatrix(fieldId, field); sfPersist();
+    }
+  });
+
+  root.addEventListener('change', function(e){
+    const t = e.target;
+    if(t.matches('input[type=radio][data-sf-field]')){
+      const fieldId=t.getAttribute('data-sf-field'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field); val.choice=t.getAttribute('data-sf-choice');
+      sfGetStudent()[sfState.formKey][fieldId]=val; sfState.lastDir='jump'; sfRenderPage(); sfPersist();
+    } else if(t.matches('input[type=checkbox][data-sf-field]')){
+      const fieldId=t.getAttribute('data-sf-field'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field);
+      if(t.hasAttribute('data-sf-cbother')){
+        const i=val.selected.indexOf('__other__');
+        if(t.checked&&i===-1) val.selected.push('__other__'); if(!t.checked&&i>-1) val.selected.splice(i,1);
+      } else {
+        const opt=t.getAttribute('data-sf-cbvalue'); const i=val.selected.indexOf(opt);
+        if(t.checked&&i===-1) val.selected.push(opt); if(!t.checked&&i>-1) val.selected.splice(i,1);
+      }
+      sfGetStudent()[sfState.formKey][fieldId]=val; sfState.lastDir='jump'; sfRenderPage(); sfPersist();
+    }
+  });
+
+  root.addEventListener('input', function(e){
+    const t = e.target;
+    if(t.matches('[data-sf-action="search"]')){ sfState.query=t.value; sfRenderPage();
+      const inp=document.querySelector('.sf-search'); if(inp){ inp.focus(); inp.selectionStart=inp.selectionEnd=inp.value.length; }
+      return;
+    }
+    if(t.matches('.sf-input[data-sf-field]') && !t.hasAttribute('data-sf-other')){
+      sfSetSimpleValue(sfState.formKey, t.getAttribute('data-sf-field'), t.value); sfPersist();
+      const fid=t.getAttribute('data-sf-field');
+      if(['full_name','first_name','last_name'].includes(fid)) sfUpdateChipUI();
+    } else if(t.hasAttribute('data-sf-other')){
+      const fieldId=t.getAttribute('data-sf-field'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field); val.other=t.value;
+      sfGetStudent()[sfState.formKey][fieldId]=val; sfPersist();
+    } else if(t.matches('[data-sf-table][data-sf-row][data-sf-col]')){
+      const fieldId=t.getAttribute('data-sf-table'); const field=sfFindField(sfState.formKey,fieldId);
+      const arr = sfGetValue(sfState.formKey, fieldId, field);
+      const row = arr.find(r=>r._id===t.getAttribute('data-sf-row'));
+      if(row) row.cells[t.getAttribute('data-sf-col')] = t.value;
+      sfPersist();
+    } else if(t.matches('[data-sf-matrix][data-sf-mrow][data-sf-mcol]')){
+      const fieldId=t.getAttribute('data-sf-matrix'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field);
+      const rk=t.getAttribute('data-sf-mrow'), ck=t.getAttribute('data-sf-mcol');
+      if(!val.values[rk]) val.values[rk]={}; val.values[rk][ck]=t.value; sfPersist();
+    } else if(t.matches('[data-sf-matrix][data-sf-colhead]')){
+      const fieldId=t.getAttribute('data-sf-matrix'); const field=sfFindField(sfState.formKey,fieldId);
+      const val = sfGetValue(sfState.formKey, fieldId, field);
+      const col = val.cols.find(c=>c._id===t.getAttribute('data-sf-colhead'));
+      if(col) col.label=t.value; sfPersist();
+    }
+  });
+}
+
+
+/* ============================================================
+   SF PRINT — faithful replica of the two official paper forms
+   for window.print() → Save as PDF. Arabic numerals throughout
+   per request (source form uses Thai numerals ๑,๒,๓...).
+============================================================ */
+function sfPV(formKey, fieldId){
+  const field = sfFindField(formKey, fieldId);
+  if(!field) return '';
+  return sfGetValue(formKey, fieldId, field);
+}
+function sfPText(formKey, fieldId){
+  const v = sfPV(formKey, fieldId);
+  return (typeof v==='string') ? v : '';
+}
+function sfPChoiceText(formKey, fieldId){
+  const v = sfPV(formKey, fieldId);
+  if(!v || typeof v!=='object') return '';
+  if(v.choice==='__other__') return v.other || '';
+  return v.choice || '';
+}
+function sfPCheckbox(formKey, fieldId, optionLabel){
+  const v = sfPV(formKey, fieldId);
+  let checked = false;
+  if(v && typeof v==='object'){
+    if(Array.isArray(v.selected)) checked = v.selected.indexOf(optionLabel)>-1;
+    else checked = v.choice===optionLabel;
+  }
+  return `<span class="sfp-checkbox">${checked?'☑':'☐'} ${sfEscapeHtml(optionLabel)}</span>`;
+}
+function sfPOtherText(formKey, fieldId){
+  const v = sfPV(formKey, fieldId);
+  if(v && typeof v==='object'){
+    if(Array.isArray(v.selected) && v.selected.indexOf('__other__')>-1) return v.other||'';
+    if(v.choice==='__other__') return v.other||'';
+  }
+  return '';
+}
+function sfFill(text, minWidth){
+  const t = sfEscapeHtml(text||'');
+  return `<span class="sfp-fill" style="min-width:${minWidth||40}px">${t||'&nbsp;'}</span>`;
+}
+function sfPLine(label, formKey, fieldId, minWidth){
+  return `<span class="sfp-field-line"><span>${sfEscapeHtml(label)}</span>${sfFill(sfPText(formKey,fieldId), minWidth)}</span>`;
+}
+function sfPTableHtml(columns, rows){
+  const thead = '<tr>'+columns.map(c=>`<th>${sfEscapeHtml(c)}</th>`).join('')+'</tr>';
+  const trs = (rows.length?rows:[[]]).map(r=>{
+    const tds = columns.map((c,i)=>`<td>${sfEscapeHtml(r[i]||'')}</td>`).join('');
+    return `<tr>${tds}</tr>`;
+  }).join('');
+  return `<table class="sfp-table"><thead>${thead}</thead><tbody>${trs}</tbody></table>`;
+}
+function sfTableRowsFor(formKey, fieldId, colIds){
+  const rows = sfPV(formKey, fieldId) || [];
+  return rows.map(r=>colIds.map(cid=>(r.cells&&r.cells[cid])||''));
+}
+function sfMatrixRowsFor(formKey, fieldId){
+  const m = sfPV(formKey, fieldId);
+  if(!m || !m.cols) return {headers:[], rows:[]};
+  const headers = m.cols.map(c=>c.label||'ระดับชั้น/ปี');
+  const field = sfFindField(formKey, fieldId);
+  const rows = field.rows.map(r=>{
+    const rowVals = m.cols.map(c=> (m.values[r.id]&&m.values[r.id][c._id]) || '');
+    return [r.label, ...rowVals];
+  });
+  return {headers, rows};
+}
+function sfPageHeader(no){ return `<div class="sfp-pageno">หน้า ${no}</div>`; }
+
+/* ---------------- FORM 1 ---------------- */
+function sfPrintForm1(student){
+  const f='form1';
+  const gradesM = sfMatrixRowsFor(f,'grades_matrix');
+  const eduRows = sfTableRowsFor(f,'education_history',['level','school','province']);
+  const planRows = sfTableRowsFor(f,'study_plan',['level','track','advisor']);
+  const friendRows = sfTableRowsFor(f,'friends_school',['name','class','room','phone','reason']);
+  const neighborRows = sfTableRowsFor(f,'friend_neighbor',['name','class','room','phone']);
+  const prideRows = sfTableRowsFor(f,'pride_table',['level','pride','develop','help']);
+  const sibRows = sfTableRowsFor(f,'siblings_table',['name','age','education','occupation','income','workplace','status']);
+  const scholRows = sfTableRowsFor(f,'other_scholarships',['name','amount','year']);
+  const incomeRows = sfTableRowsFor(f,'part_time_income',['detail']);
+  const tutorRows = sfTableRowsFor(f,'extra_tutoring',['subject','time','teacher']);
+  const needRows = sfTableRowsFor(f,'additional_needs',['detail']);
+  const loyaltyRows = sfTableRowsFor(f,'loyalty_activities',['detail']);
+  const receiptRows = sfTableRowsFor(f,'receipts',['no','date','amount','part1','part2','part3']);
+
+  return `
+  <div class="sfp-page">${sfPageHeader(1)}
+    <div class="sfp-center">
+      <div class="sfp-sub">แบบฟอร์มที่ 1 แบบรายงานข้อมูลรายบุคคล</div>
+      <div class="sfp-sub">(สำหรับสถานศึกษาจัดทำทุกครั้งเมื่อรับนักเรียนทุนเข้าศึกษาในสถานศึกษา)</div>
+      <div class="sfp-title" style="margin-top:8px">แบบรายงานข้อมูลรายบุคคล</div>
+      <div class="sfp-sub">ผู้รับทุนการศึกษามูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์</div>
+      <div class="sfp-sub">เนื่องในโอกาสมหามงคลเฉลิมพระชนมพรรษาพระบาทสมเด็จพระเจ้าอยู่หัว ทรงเจริญพระชนมพรรษา 6 รอบ 28 กรกฎาคม 2567</div>
+      <div class="sfp-sub">รับทุนปีที่ ${sfFill(sfPText(f,'fund_year'),40)} ปีการศึกษา ${sfFill(sfPText(f,'academic_year'),40)}</div>
+    </div>
+    <hr class="sfp-hr">
+    ${sfPLine('สถานศึกษา', f,'school_name',300)}<br>
+    ${sfPLine('ที่ตั้ง เลขที่', f,'addr_no',50)} ${sfPLine('หมู่ที่', f,'addr_moo',40)} ${sfPLine('ถนน', f,'addr_road',80)} ${sfPLine('ตำบล', f,'addr_tambon',90)} ${sfPLine('อำเภอ', f,'addr_amphoe',90)}<br>
+    ${sfPLine('จังหวัด', f,'addr_province',100)} ${sfPLine('รหัสไปรษณีย์', f,'addr_zip',60)} ${sfPLine('โทรศัพท์', f,'phone',90)}<br>
+    ${sfPLine('โทรสาร', f,'fax',80)} ${sfPLine('อีเมล', f,'email',150)}
+    <div class="sfp-section-title">1. ข้อมูลส่วนตัว</div>
+    1.1 ${sfPLine('ชื่อ - นามสกุล ผู้รับทุนการศึกษา', f,'full_name',260)} ${sfPLine('ชื่อเล่น', f,'nickname',80)}<br>
+    ${sfPLine('เลขประจำตัวประชาชน', f,'national_id',130)} ${sfPLine('วัน เดือน ปีเกิด', f,'dob',100)} ${sfPLine('เชื้อชาติ', f,'nationality',60)} ${sfPLine('ศาสนา', f,'religion',60)}<br>
+    ${sfPLine('ภูมิลำเนา (จังหวัด)', f,'hometown',150)}<br>
+    ${sfPLine('ที่อยู่ปัจจุบัน เลขที่', f,'cur_addr_no',50)} ${sfPLine('หมู่ที่', f,'cur_addr_moo',40)} ${sfPLine('ถนน', f,'cur_addr_road',80)} ${sfPLine('ตำบล', f,'cur_addr_tambon',90)}<br>
+    ${sfPLine('อำเภอ', f,'cur_addr_amphoe',100)} ${sfPLine('จังหวัด', f,'cur_addr_province',100)} ${sfPLine('รหัสไปรษณีย์', f,'cur_addr_zip',60)}<br>
+    ${sfPLine('โทรศัพท์', f,'cur_phone',100)} ${sfPLine('อีเมล', f,'cur_email',150)} ${sfPLine('ID Line', f,'id_line',100)}<br>
+    ปัจจุบันอาศัยอยู่กับ ${sfPCheckbox(f,'live_with','บิดาและมารดา')} ${sfPCheckbox(f,'live_with','บิดา')} ${sfPCheckbox(f,'live_with','มารดา')} ${sfPCheckbox(f,'live_with','__other__')} ระบุ ${sfFill(sfPOtherText(f,'live_with'),120)}<br>
+    ลักษณะของที่อยู่ ${sfPCheckbox(f,'residence_type','บ้านส่วนตัว')} ${sfPCheckbox(f,'residence_type','บ้านเช่า')} ${sfPCheckbox(f,'residence_type','หอพัก')} ${sfPCheckbox(f,'residence_type','ห้องเช่า')} ${sfPCheckbox(f,'residence_type','__other__')} ระบุ ${sfFill(sfPOtherText(f,'residence_type'),120)}<br>
+    นักเรียนเดินทางมาสถานศึกษาโดย ${sfPCheckbox(f,'travel_method','รถประจำทาง')} ${sfPCheckbox(f,'travel_method','จักรยาน')} ${sfPCheckbox(f,'travel_method','จักรยานยนต์')} ${sfPCheckbox(f,'travel_method','เดิน')} ${sfPCheckbox(f,'travel_method','__other__')} ระบุ ${sfFill(sfPOtherText(f,'travel_method'),120)}<br>
+    ระยะทางจากบ้านมาสถานศึกษา ${sfFill(sfPText(f,'distance_km'),40)} กิโลเมตร ใช้เวลาเดินทาง ${sfFill(sfPText(f,'travel_hour'),30)} ชั่วโมง ${sfFill(sfPText(f,'travel_min'),30)} นาที<br>
+    ${sfPLine('ได้รับเงินเพื่อเป็นค่าใช้จ่ายจาก', f,'expense_source',200)} เป็นเงิน ${sfFill(sfPText(f,'expense_amount'),50)} บาท/วัน<br>
+    โดยจำแนกค่าใช้จ่าย ดังนี้ ค่าพาหนะเดินทางไป-กลับ ${sfFill(sfPText(f,'expense_transport'),40)} บาท/วัน ค่าอาหารเช้า-กลางวัน ${sfFill(sfPText(f,'expense_food'),40)} บาท/วัน<br>
+    ${sfPLine('ค่าใช้จ่ายอื่น ๆ ระบุ', f,'expense_other',300)}
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(2)}
+    <div class="sfp-section-title">เพื่อนในสถานศึกษาที่สนิทมากที่สุด</div>
+    ${sfPTableHtml(['ชื่อ - นามสกุล','ชั้น','ห้อง','โทรศัพท์','เหตุผล'], friendRows)}
+    <div class="sfp-section-title">เพื่อนที่อยู่บ้านใกล้เคียงกับนักเรียนมากที่สุด</div>
+    ${sfPTableHtml(['ชื่อ - นามสกุล','ชั้น','ห้อง','โทรศัพท์'], neighborRows)}
+    <div class="sfp-section-title">1.2 ทุนการศึกษานี้เป็นทุนต่อเนื่องจนจบระดับปริญญาตรี นักเรียนมีความคาดหวังด้านการศึกษาอย่างไร?</div>
+    <div>${sfEscapeHtml(sfPText(f,'expect_education'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">1.3 ความคาดหวังด้านอาชีพในอนาคต</div>
+    <div>${sfEscapeHtml(sfPText(f,'expect_career'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">1.4 ความภาคภูมิใจและความต้องการพัฒนาตนเอง</div>
+    ${sfPTableHtml(['ระดับชั้น/ปี','ความภาคภูมิใจในตนเอง','ความต้องการในการพัฒนาตนเอง','ความต้องการให้ครูหรือสถานศึกษาช่วยเหลือ'], prideRows)}
+    <div class="sfp-section-title">2. ข้อมูลด้านสุขภาพ</div>
+    ${sfPLine('หมู่โลหิต', f,'blood_type',60)} ${sfPLine('มีตำหนิที่เห็นชัดเจน คือ', f,'visible_mark',220)}<br>
+    ${sfPLine('โรคประจำตัว', f,'chronic_disease',150)} ${sfPLine('การรักษาพยาบาลเบื้องต้น', f,'treatment',200)}<br>
+    ${sfPLine('แพ้ยา', f,'allergy',150)} ${sfPLine('ยาที่ใช้ประจำ', f,'regular_medicine',200)}<br>
+    สายตา ${sfPCheckbox(f,'eyesight','ปกติ')} ${sfPCheckbox(f,'eyesight','สายตาสั้น')} ${sfPCheckbox(f,'eyesight','สายตายาว')} ${sfPCheckbox(f,'eyesight','สายตาเอียง')} ${sfPCheckbox(f,'eyesight','__other__')} ระบุ ${sfFill(sfPOtherText(f,'eyesight'),120)}<br>
+    ความบกพร่องทางร่างกาย ${sfPCheckbox(f,'impairment','ไม่มี')} ${sfPCheckbox(f,'impairment','มี')} คือ ${sfFill(sfPText(f,'impairment_detail'),180)}<br>
+    เคยป่วยหนักหรือประสบอุบัติเหตุร้ายแรงถึงขั้นเข้านอนโรงพยาบาล คือ ${sfFill(sfPText(f,'serious_illness'),260)} เมื่อ พ.ศ. ${sfFill(sfPText(f,'illness_year'),60)}
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(3)}
+    <div class="sfp-section-title">3. ข้อมูลด้านครอบครัว</div>
+    <b>บิดา</b> ${sfPLine('ชื่อ', f,'father_name',120)} ${sfPLine('นามสกุล', f,'father_surname',120)}<br>
+    ${sfPLine('เลขประจำตัวประชาชน', f,'father_id',130)} ${sfPLine('อายุ', f,'father_age',40)} ปี<br>
+    ${sfPLine('การศึกษา', f,'father_education',120)} ${sfPLine('อาชีพ', f,'father_occupation',120)} ${sfPLine('รายได้ต่อปี', f,'father_income',80)} บาท<br>
+    ${sfPLine('ที่อยู่หรือที่ทำงาน', f,'father_workplace',260)} ${sfPLine('โทรศัพท์', f,'father_phone',100)}<br>
+    <b>มารดา</b> ${sfPLine('ชื่อ', f,'mother_name',120)} ${sfPLine('นามสกุล', f,'mother_surname',120)}<br>
+    ${sfPLine('เลขประจำตัวประชาชน', f,'mother_id',130)} ${sfPLine('อายุ', f,'mother_age',40)} ปี<br>
+    ${sfPLine('การศึกษา', f,'mother_education',120)} ${sfPLine('อาชีพ', f,'mother_occupation',120)} ${sfPLine('รายได้ต่อปี', f,'mother_income',80)} บาท<br>
+    ${sfPLine('ที่อยู่หรือที่ทำงาน', f,'mother_workplace',260)} ${sfPLine('โทรศัพท์', f,'mother_phone',100)}<br>
+    <b>ผู้ปกครอง</b> ${sfPLine('ชื่อ', f,'guardian_name',120)} ${sfPLine('นามสกุล', f,'guardian_surname',120)}<br>
+    ${sfPLine('เลขประจำตัวประชาชน', f,'guardian_id',130)} ${sfPLine('อายุ', f,'guardian_age',40)} ปี<br>
+    ${sfPLine('การศึกษา', f,'guardian_education',120)} ${sfPLine('อาชีพ', f,'guardian_occupation',120)} ${sfPLine('รายได้ต่อปี', f,'guardian_income',80)} บาท<br>
+    ${sfPLine('ที่อยู่หรือที่ทำงาน', f,'guardian_workplace',260)} ${sfPLine('โทรศัพท์', f,'guardian_phone',100)}<br>
+    ผู้ปกครอง คือ ${sfPCheckbox(f,'guardian_type','บิดา')} ${sfPCheckbox(f,'guardian_type','มารดา')} ${sfPCheckbox(f,'guardian_type','__other__')} ผู้อื่นซึ่งเกี่ยวข้องเป็น ${sfFill(sfPOtherText(f,'guardian_type'),140)}<br>
+    ปัจจุบันบิดามารดา ${sfPCheckbox(f,'parents_status','อยู่ด้วยกัน')} ${sfPCheckbox(f,'parents_status','หย่าร้าง')} ${sfPCheckbox(f,'parents_status','แยกกันอยู่')} ${sfPCheckbox(f,'parents_status','บิดาถึงแก่กรรม')} ${sfPCheckbox(f,'parents_status','มารดาถึงแก่กรรม')} ${sfPCheckbox(f,'parents_status','__other__')} ระบุ ${sfFill(sfPOtherText(f,'parents_status'),120)}<br>
+    ภาระหนี้สินของครอบครัว ${sfPCheckbox(f,'family_debt','ไม่มี')} ${sfPCheckbox(f,'family_debt','มี')} จำนวน ${sfFill(sfPText(f,'family_debt_amount'),80)} บาท<br>
+    ครอบครัวของนักเรียนมีสมาชิกทั้งหมด ${sfFill(sfPText(f,'family_members'),40)} คน นักเรียนมีพี่น้องทั้งหมด ${sfFill(sfPText(f,'siblings_total'),40)} คน
+    <div class="sfp-section-title">พี่น้องร่วมบิดามารดาเดียวกัน เรียงลำดับ ดังนี้</div>
+    ${sfPTableHtml(['ชื่อ - สกุล','อายุ','การศึกษา','อาชีพ/ตำแหน่ง','รายได้ต่อเดือน','สถานศึกษาหรือที่ทำงาน','สถานภาพ'], sibRows)}
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(4)}
+    ${sfPLine('บุคคลในครอบครัวที่นักเรียนไว้ใจมากที่สุด ชื่อ-นามสกุล', f,'trusted_name',260)}<br>
+    ${sfPLine('อายุ', f,'trusted_age',40)} ปี ${sfPLine('เกี่ยวข้องเป็น', f,'trusted_relation',120)} ${sfPLine('โทรศัพท์', f,'trusted_phone',100)}<br>
+    ความสัมพันธ์ในครอบครัวระหว่างบิดา-มารดา<br>
+    ${sfPCheckbox(f,'parents_relationship','รักใคร่กันดี')} ${sfPCheckbox(f,'parents_relationship','ขัดแย้งทะเลาะกันบางครั้ง')}<br>
+    ${sfPCheckbox(f,'parents_relationship','ขัดแย้งทะเลาะกันบ่อยครั้ง')} ${sfPCheckbox(f,'parents_relationship','ขัดแย้งและทำร้ายร่างกายบางครั้ง')}<br>
+    ${sfPCheckbox(f,'parents_relationship','ขัดแย้งและทำร้ายร่างกายบ่อยครั้ง')} ${sfPCheckbox(f,'parents_relationship','__other__')} ระบุ ${sfFill(sfPOtherText(f,'parents_relationship'),140)}<br>
+    บุคคลในครอบครัวมีการใช้สารเสพติด ${sfPCheckbox(f,'substance_abuse','ไม่มี')} ${sfPCheckbox(f,'substance_abuse','มี')} เกี่ยวข้องเป็น ${sfFill(sfPText(f,'substance_relation'),140)} กับนักเรียน
+    <div class="sfp-section-title">แผนที่แสดงการเดินทางจากสถานศึกษาไปบ้าน (โดยสังเขป)</div>
+    <div style="border:1px solid #000;min-height:120px;padding:8px">${sfEscapeHtml(sfPText(f,'travel_map_note'))||'<span style="color:#666">โปรดแนบรูปถ่ายบ้านผู้รับทุนการศึกษา</span>'}</div>
+    <div class="sfp-section-title">4. ข้อมูลด้านการเรียนและความสามารถ</div>
+    4.1 ประวัติการศึกษา
+    ${sfPTableHtml(['ระดับการศึกษา','สถานศึกษา','จังหวัด'], eduRows)}
+    <div style="font-size:11px;color:#333">หมายเหตุ กรณีเรียนระดับชั้นสูงกว่าหรือเทียบเท่า ให้ปรับแก้ไข เพื่อกรอกข้อมูลตามความเหมาะสม</div>
+    ${sfPTableHtml(['ระดับชั้น/ปี','แผนการเรียน/แผนก/สาขาวิชา','ครูที่ปรึกษาหรือครูผู้ดูแล'], planRows)}
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(5)}
+    4.2 ข้อมูลผลการเรียน
+    ${sfPTableHtml(['ภาคเรียน', ...gradesM.headers], gradesM.rows)}
+    <div style="font-size:11px;color:#333">หมายเหตุ เป็นข้อมูลผลการเรียนในสถานศึกษาที่เรียนอยู่ในปัจจุบัน แนบรายงานผลการเรียนแต่ละภาคเรียน</div>
+    <div class="sfp-section-title">4.3 ความสามารถพิเศษ</div>
+    <div>${sfEscapeHtml(sfPText(f,'special_ability'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">4.4 ผลงานดีเด่นและความภาคภูมิใจในปีที่ผ่านมา</div>
+    <div>${sfEscapeHtml(sfPText(f,'achievement'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">5. ข้อมูลด้านการดูแลช่วยเหลือที่สถานศึกษาดำเนินการ</div>
+    5.1 ทุนการศึกษาอื่นที่ได้รับ
+    ${sfPTableHtml(['ชื่อทุน','จำนวนเงิน','เมื่อปี พ.ศ.'], scholRows)}
+    5.2 การหารายได้ระหว่างเรียน
+    ${sfPTableHtml(['รายละเอียด'], incomeRows)}
+    5.3 การได้รับการสอนเสริมพิเศษ
+    ${sfPTableHtml(['วิชา','ช่วงเวลา','ผู้สอน'], tutorRows)}
+    5.4 อื่น ๆ (ตอบได้มากกว่า 1 ข้อ)<br>
+    ${sfPCheckbox(f,'other_support','จัดที่พัก')} ${sfPCheckbox(f,'other_support','จัดรถรับส่ง')} ${sfPCheckbox(f,'other_support','จัดอาหารกลางวัน')} ${sfPCheckbox(f,'other_support','สนับสนุนอุปกรณ์การเรียน')} ${sfPCheckbox(f,'other_support','__other__')} ระบุ ${sfFill(sfPOtherText(f,'other_support'),140)}
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(6)}
+    <div class="sfp-section-title">6. ความต้องการในการได้รับความช่วยเหลือเพิ่มเติม</div>
+    ${sfPTableHtml(['รายละเอียด'], needRows)}
+    <div class="sfp-section-title">7. การเข้าร่วมกิจกรรมที่แสดงถึงความสำนึกในพระมหากรุณาธิคุณ</div>
+    ${sfPTableHtml(['รายละเอียด'], loyaltyRows)}
+    <div class="sfp-section-title">8. ข้อมูลด้านการรับเงินทุนการศึกษาและการใช้จ่าย</div>
+    ${sfPLine('บัญชีธนาคาร', f,'bank_name',160)} ${sfPLine('สาขา', f,'bank_branch',140)}<br>
+    ${sfPLine('ชื่อบัญชี', f,'account_name',260)} ${sfPLine('เลขที่บัญชี', f,'account_no',140)}<br>
+    ผู้มีอำนาจสั่งจ่าย 1. ${sfFill(sfPText(f,'signer1'),180)} 2. ${sfFill(sfPText(f,'signer2'),180)}
+    ${sfPTableHtml(['ครั้งที่','วันที่ได้รับ','จำนวนเงิน','ส่วนที่ 1 สถานศึกษาเรียกเก็บ','ส่วนที่ 2 ค่าครองชีพ','ส่วนที่ 3 กรณีพิเศษเฉพาะราย'], receiptRows)}
+    <div class="sfp-center" style="margin-top:8px">ขอรับรองว่าข้อมูลข้างต้นเป็นจริงทุกประการ</div>
+    <div class="sfp-sign-row">
+      <div class="sfp-sign">ลงชื่อ ..................................................<br>(..................................................)<br>ผู้รับทุนการศึกษา<br>วันที่ ${sfEscapeHtml(sfPText(f,'student_sign_date'))||'..........................'}</div>
+    </div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(7)}
+    <div class="sfp-section-title">9. ครูที่ปรึกษาหรือครูผู้ดูแลบันทึกความคิดเห็นเพิ่มเติม</div>
+    9.1 ด้านการเรียน<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_study'))||'&nbsp;'}</div>
+    9.2 ด้านความประพฤติ<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_behavior'))||'&nbsp;'}</div>
+    9.3 ด้านอื่น ๆ<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_other'))||'&nbsp;'}</div>
+    <div class="sfp-center" style="margin-top:8px">ขอรับรองว่าข้อมูลข้างต้นเป็นจริงทุกประการ</div>
+    <div class="sfp-sign-row">
+      <div class="sfp-sign">แบบรายงานสำหรับนักเรียน<br>ลงชื่อ ..................................................ครูที่ปรึกษาหรือครูผู้ดูแล<br>
+      (${sfEscapeHtml(sfPText(f,'teacher_name'))||'..................................................'})<br>
+      ตำแหน่ง ${sfEscapeHtml(sfPText(f,'teacher_position'))||'..........................'}<br>
+      สถานศึกษา ${sfEscapeHtml(sfPText(f,'teacher_school'))||'..........................'}<br>
+      เบอร์โทรศัพท์ ${sfEscapeHtml(sfPText(f,'teacher_phone'))||'..........................'}<br>
+      วันที่ ${sfEscapeHtml(sfPText(f,'teacher_sign_date'))||'..........................'}</div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- FORM 2 ---------------- */
+function sfPrintForm2(student){
+  const f='form2';
+  const gradesM = sfMatrixRowsFor(f,'grades_matrix');
+  const tutorRows = sfTableRowsFor(f,'tutoring',['subject','time','teacher']);
+  const fundRows = sfTableRowsFor(f,'extra_funding',['source','amount']);
+  const receiptRows = sfTableRowsFor(f,'receipts',['no','date','amount','part1','part2','part3']);
+  const fullName = [sfPChoiceText(f,'prefix'), sfPText(f,'first_name'), sfPText(f,'last_name')].filter(Boolean).join(' ');
+
+  return `
+  <div class="sfp-page">${sfPageHeader(1)}
+    <div class="sfp-center">
+      <div class="sfp-sub">แบบฟอร์มที่ 2 แบบรายงานผลการเรียนฯ</div>
+      <div class="sfp-sub">(สำหรับสถานศึกษาจัดทำทุกภาคเรียน)</div>
+      <div class="sfp-title" style="margin-top:10px">รายงานผลการเรียน ความประพฤติ และการใช้จ่ายเงินทุนการศึกษา</div>
+      <div class="sfp-sub">ของผู้รับทุนการศึกษามูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์</div>
+      <div class="sfp-sub">เนื่องในโอกาสมหามงคลเฉลิมพระชนมพรรษา พระบาทสมเด็จพระเจ้าอยู่หัว ทรงเจริญพระชนมพรรษา 6 รอบ 28 กรกฎาคม 2567</div>
+      <div class="sfp-sub" style="margin-top:10px">ภาคเรียนที่ ${sfFill(sfPText(f,'semester'),40)} ปีการศึกษา ${sfFill(sfPText(f,'academic_year'),60)}</div>
+      <div class="sfp-sub" style="margin-top:14px">${sfFill(fullName,240)}</div>
+      <div class="sfp-sub">ระดับชั้น ${sfFill(sfPText(f,'grade_level'),80)} แผน/แผนก/สาขา ${sfFill(sfPText(f,'track'),120)}</div>
+      <div class="sfp-sub">สถานศึกษา ${sfFill(sfPText(f,'school_name'),240)}</div>
+      <div class="sfp-sub">จังหวัด ${sfFill(sfPText(f,'province'),120)}</div>
+      <div class="sfp-sub">สังกัด ${sfFill(sfPText(f,'sangkad'),160)}</div>
+    </div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(2)}
+    <div class="sfp-center"><b>สรุปสาระสำคัญรายงานผลการเรียน ความประพฤติ และการใช้จ่ายเงินทุนการศึกษา</b></div>
+    <hr class="sfp-hr">
+    <div class="sfp-section-title">1. สรุปรายงานผลการเรียนของนักเรียนทุนการศึกษา</div>
+    ${sfFill(fullName,220)} ปัจจุบันเรียนระดับชั้น ${sfFill(sfPText(f,'grade_level'),80)} แผน/แผนก/สาขา ${sfFill(sfPText(f,'track'),120)}
+    ในสถานศึกษา ${sfFill(sfPText(f,'school_name'),220)} จังหวัด ${sfFill(sfPText(f,'province'),100)} สังกัด ${sfFill(sfPText(f,'sangkad'),140)}<br>
+    ในภาคเรียนที่ ${sfFill(sfPText(f,'semester'),40)} ปีการศึกษา ${sfFill(sfPText(f,'academic_year'),60)} โดยมีปัญหาอุปสรรคส่งผลต่อการเรียน<br>
+    <div>${sfEscapeHtml(sfPText(f,'learning_problems'))||'&nbsp;'}</div>
+    ปัจจุบันได้รับความช่วยเหลือจากโรงเรียนด้าน<br>
+    <div>${sfEscapeHtml(sfPText(f,'current_help'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">2. สรุปรายงานความประพฤติของนักเรียนทุนการศึกษา</div>
+    <div>${sfEscapeHtml([sfPText(f,'activities_participation'), sfPText(f,'community_loyalty')].filter(Boolean).join(' / '))||'&nbsp;'}</div>
+    <div class="sfp-section-title">3. สรุปรายงานการใช้จ่ายเงินทุนการศึกษา</div>
+    จากเงินทุนการศึกษาที่ได้รับจำนวนรวมเป็นเงินทั้งสิ้น ${sfFill(sfPText(f,'total_received'),80)} บาท ได้เบิกจ่ายไปแล้วจนถึงปัจจุบันรวมทั้งสิ้น ${sfFill(sfPText(f,'total_disbursed'),80)} บาท แยกเป็น<br>
+    3.1 เงินทุนส่วนที่ 1 ค่าใช้จ่ายที่สถานศึกษาเรียกเก็บ ${sfFill(sfPText(f,'part1_amount'),80)} บาท<br>
+    3.2 เงินทุนส่วนที่ 2 ค่าใช้จ่ายครองชีพประจำตัว ${sfFill(sfPText(f,'part2_amount'),80)} บาท<br>
+    3.3 เงินทุนส่วนที่ 3 ค่าใช้จ่ายที่จำเป็นอย่างยิ่งต่อการเรียนเป็นกรณีพิเศษเฉพาะราย ${sfFill(sfPText(f,'part3_amount'),80)} บาท<br>
+    ยอดคงเหลือ ณ วันที่ ${sfFill(sfPText(f,'balance_date'),100)} จำนวน ${sfFill(sfPText(f,'balance'),80)} บาท
+    <div class="sfp-center" style="margin-top:10px">ขอรับรองว่าเป็นความจริงทุกประการ</div>
+    <div class="sfp-sign-row">
+      <div class="sfp-sign">ลงชื่อ .................................................. ครูที่ปรึกษาหรือครูผู้ดูแล<br>(${sfEscapeHtml(sfPText(f,'teacher_name'))||'..................................................'})<br>ตำแหน่ง ${sfEscapeHtml(sfPText(f,'teacher_position'))||'..........................'}<br>โทรศัพท์ ${sfEscapeHtml(sfPText(f,'teacher_phone'))||'..........................'}<br>วันที่ ${sfEscapeHtml(sfPText(f,'teacher_sign_date'))||'..........................'}</div>
+      <div class="sfp-sign">ลงชื่อ .................................................. ผู้อำนวยการสถานศึกษา<br>(${sfEscapeHtml(sfPText(f,'director_name'))||'..................................................'})<br>วันที่ ${sfEscapeHtml(sfPText(f,'director_sign_date'))||'..........................'}</div>
+    </div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(3)}
+    <div class="sfp-center"><b>รายงานผลการเรียน ความประพฤติ และการใช้จ่ายเงินทุนการศึกษา</b><br>
+    ภาคเรียนที่ ${sfFill(sfPText(f,'semester'),40)} ปีการศึกษา ${sfFill(sfPText(f,'academic_year'),60)}</div>
+    <div class="sfp-section-title">ข้อมูลทั่วไป</div>
+    1. ${sfFill(fullName,220)} ชื่อเล่น ${sfFill(sfPText(f,'nickname'),80)}<br>
+    เลขประจำตัวประชาชน ${sfFill(sfPText(f,'national_id'),130)} วัน เดือน ปีเกิด ${sfFill(sfPText(f,'dob'),100)}<br>
+    2. สถานศึกษา ${sfFill(sfPText(f,'school_name'),220)} อำเภอ ${sfFill(sfPText(f,'amphoe'),100)}<br>
+    จังหวัด ${sfFill(sfPText(f,'province'),100)} สังกัด ${sfFill(sfPText(f,'sangkad'),140)} ระดับชั้น ${sfFill(sfPText(f,'grade_level'),80)}
+    <div class="sfp-section-title">ข้อมูลผลการเรียน</div>
+    3. ข้อมูลผลการเรียน (โปรดแนบรายละเอียดรายงานผลการเรียนรายวิชาที่สถานศึกษารับรองแล้ว)
+    ${sfPTableHtml(['ภาคเรียน', ...gradesM.headers], gradesM.rows)}
+    <div class="sfp-section-title">4. ปัญหาอุปสรรคที่ส่งผลต่อการเรียนที่เป็นสาเหตุให้มีคะแนนผลการเรียนลดลง</div>
+    <div>${sfEscapeHtml(sfPText(f,'learning_problems'))||'&nbsp;'}</div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(4)}
+    <div class="sfp-section-title">5. การดูแลช่วยเหลือที่สถานศึกษาดำเนินการ (เลือกได้มากกว่า 1 ข้อ)</div>
+    จัดสอนเสริมพิเศษ ได้แก่
+    ${sfPTableHtml(['วิชา','ช่วงเวลา','ผู้สอน'], tutorRows)}
+    จัดหาเงินทุนจากแหล่งอื่นเพิ่มเติม ได้แก่
+    ${sfPTableHtml(['แหล่งทุน','จำนวนเงิน'], fundRows)}
+    ${sfPCheckbox(f,'support_other','จัดอาหารกลางวัน')} ${sfPCheckbox(f,'support_other','จัดที่พักในสถานศึกษา')} ${sfPCheckbox(f,'support_other','จัดบริการรถรับส่ง')} ${sfPCheckbox(f,'support_other','จัดให้หารายได้ระหว่างเรียน')} ${sfPCheckbox(f,'support_other','__other__')} ระบุ ${sfFill(sfPOtherText(f,'support_other'),140)}
+    <div class="sfp-section-title">6. ความต้องการในการได้รับความช่วยเหลือเพิ่มเติม จากสถานศึกษา ครู หรือ อื่น ๆ</div>
+    <div>${sfEscapeHtml(sfPText(f,'additional_needs'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">7. ความคาดหวังด้านการศึกษา</div>
+    <div>${sfEscapeHtml(sfPText(f,'expect_education'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">8. ความคาดหวังด้านอาชีพในอนาคต</div>
+    <div>${sfEscapeHtml(sfPText(f,'expect_career'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">9. ผลงานดีเด่น ความภาคภูมิใจ ในปีที่ผ่านมา</div>
+    <div>${sfEscapeHtml(sfPText(f,'achievement'))||'&nbsp;'}</div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(5)}
+    <div class="sfp-section-title">ข้อมูลความประพฤติ</div>
+    <div class="sfp-section-title">10. การเข้าร่วมกิจกรรมต่าง ๆ ของสถานศึกษาในภาคเรียนปัจจุบัน</div>
+    <div>${sfEscapeHtml(sfPText(f,'activities_participation'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">11. งานที่ต้องรับผิดชอบดูแลช่วยเหลือครอบครัวในด้านต่าง ๆ</div>
+    <div>${sfEscapeHtml(sfPText(f,'family_responsibility'))||'&nbsp;'}</div>
+    <div class="sfp-section-title">12. การมีส่วนร่วมในการดำเนินกิจกรรมที่เป็นประโยชน์ต่อชุมชนและสังคม ตลอดจนการแสดงถึงความจงรักภักดีต่อสถาบันพระมหากษัตริย์</div>
+    <div>${sfEscapeHtml(sfPText(f,'community_loyalty'))||'&nbsp;'}</div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(6)}
+    <div class="sfp-section-title">ข้อมูลด้านการรับเงินทุนการศึกษาและการใช้จ่าย</div>
+    13. ${sfPLine('บัญชีธนาคาร', f,'bank_name',160)} ${sfPLine('สาขา', f,'bank_branch',140)}<br>
+    ${sfPLine('ชื่อบัญชี', f,'account_name',260)} ${sfPLine('เลขที่บัญชี', f,'account_no',140)}<br>
+    ผู้มีอำนาจสั่งจ่าย 1. ${sfFill(sfPText(f,'signer1'),180)} 2. ${sfFill(sfPText(f,'signer2'),180)}
+    14. รายงานการรับเงินทุนการศึกษาและการใช้จ่าย (โปรดแนบสำเนาสมุดบัญชีเงินฝากธนาคารที่แสดงยอด ณ วันที่รายงาน)
+    ${sfPTableHtml(['ครั้งที่','วันที่ได้รับ','จำนวนเงิน','ส่วนที่ 1 สถานศึกษาเรียกเก็บ','ส่วนที่ 2 ค่าครองชีพ','ส่วนที่ 3 กรณีพิเศษเฉพาะราย'], receiptRows)}
+    <div class="sfp-center" style="margin-top:8px">ขอรับรองว่าข้อมูลข้างต้นเป็นจริงทุกประการ</div>
+    <div class="sfp-sign-row">
+      <div class="sfp-sign">ลงชื่อ ..................................................<br>(..................................................)<br>ผู้รับทุนการศึกษา<br>วันที่ ${sfEscapeHtml(sfPText(f,'student_sign_date'))||'..........................'}</div>
+    </div>
+  </div>
+
+  <div class="sfp-page">${sfPageHeader(7)}
+    <div class="sfp-section-title">ข้อมูลข้อคิดเห็นเพิ่มเติมของครูที่ปรึกษาหรือครูผู้ดูแล</div>
+    15. ด้านการเรียนของผู้รับทุนการศึกษา<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_study'))||'&nbsp;'}</div>
+    16. ด้านความประพฤติและการปฏิบัติตนของผู้รับทุนการศึกษา<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_behavior'))||'&nbsp;'}</div>
+    17. การรับรองและข้อคิดเห็นเพิ่มเติมของครูที่ปรึกษาหรือครูผู้ดูแล ในการใช้จ่ายเงินทุนการศึกษาของผู้รับทุนการศึกษา<br><div>${sfEscapeHtml(sfPText(f,'teacher_comment_expense'))||'&nbsp;'}</div>
+    <div class="sfp-center" style="margin-top:8px">ขอรับรองว่าข้อมูลข้างต้นเป็นจริงทุกประการ และได้กำกับ ดูแล ตรวจสอบการเบิกจ่ายเงินของผู้รับทุนการศึกษาตามเงื่อนไขข้อกำหนด</div>
+    <div class="sfp-sign-row">
+      <div class="sfp-sign">ลงชื่อ .................................................. ครูที่ปรึกษาหรือครูผู้ดูแล<br>(${sfEscapeHtml(sfPText(f,'teacher_name'))||'..................................................'})<br>ตำแหน่ง ${sfEscapeHtml(sfPText(f,'teacher_position'))||'..........................'}<br>วันที่ ${sfEscapeHtml(sfPText(f,'teacher_sign_date'))||'..........................'}</div>
+    </div>
+  </div>`;
+}
+
+function sfPrintCurrentForm(){
+  const student = sfGetStudent();
+  if(!student) return;
+  let area = document.getElementById('sf-print-area');
+  if(!area){ area = document.createElement('div'); area.id='sf-print-area'; document.body.appendChild(area); }
+  area.innerHTML = sfState.formKey==='form1' ? sfPrintForm1(student) : sfPrintForm2(student);
+  setTimeout(()=>window.print(), 50);
+}
+
+/* ---------------- PREVIEW MODAL (ดูตัวอย่างก่อนพิมพ์) ---------------- */
+const SF_SECTION_ICON = {
+  school:'🏫', personal:'🧑', health:'🩺', family:'👨‍👩‍👧', relations:'❤️', study:'🎓',
+  support:'🤝', needs:'📋', finance:'💰', general:'🧑', grades:'📊', assistance:'🤝', behavior:'🌟'
+};
+function sfFieldSummaryValue(formKey, field){
+  if(field.type==='text'||field.type==='number'||field.type==='date'||field.type==='textarea'){
+    return sfPText(formKey, field.id);
+  }
+  if(field.type==='radio') return sfPChoiceText(formKey, field.id);
+  if(field.type==='checkboxgroup'){
+    const v = sfPV(formKey, field.id);
+    const sel = (v&&v.selected)||[];
+    return sel.map(s=> s==='__other__' ? (v.other||'') : s).filter(Boolean).join(', ');
+  }
+  if(field.type==='table'){
+    const rows = sfPV(formKey, field.id)||[];
+    const filled = rows.filter(r=>Object.values(r.cells||{}).some(v=>v));
+    return filled.length ? `${filled.length} รายการ` : '';
+  }
+  if(field.type==='matrix'){
+    const m = sfPV(formKey, field.id);
+    if(!m) return '';
+    const hasAny = Object.keys(m.values||{}).some(rk=>Object.values(m.values[rk]||{}).some(v=>v));
+    return hasAny ? 'มีข้อมูลผลการเรียน' : '';
+  }
+  return '';
+}
+function sfBuildSummary(formKey, student){
+  const sections = sfGetSections(formKey);
+  return sections.map((section,idx)=>{
+    const cards = section.fields.filter(f=>['text','number','date','textarea','radio','checkboxgroup'].includes(f.type))
+      .map(f=>{
+        const val = sfFieldSummaryValue(formKey, f);
+        if(!val) return '';
+        return `<div class="sf-sum-card"><div class="sf-sum-card-label">${sfEscapeHtml(f.label)}</div><div class="sf-sum-card-value">${sfEscapeHtml(val)}</div></div>`;
+      }).filter(Boolean).join('');
+    const hasAny = cards.length>0;
+    const icon = SF_SECTION_ICON[section.id] || '📄';
+    return `<div class="sf-sum-section">
+      <div class="sf-sum-section-head">
+        <span class="sf-sum-section-icon">${icon}</span>
+        <h3>${idx+1}. ${sfEscapeHtml(section.title)}</h3>
+        <span class="sf-pill ${hasAny?'sf-pill-done':''}">${hasAny?'✓ มีข้อมูล':'ยังไม่มีข้อมูล'}</span>
+      </div>
+      <div class="sf-sum-grid">${hasAny?cards:'<div class="sf-sum-empty">ยังไม่ได้กรอกข้อมูลในหมวดนี้</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function sfPreviewEscHandler(e){ if(e.key==='Escape') sfClosePreview(); }
+function sfClosePreview(){
+  const overlay = document.getElementById('sf-preview-overlay');
+  if(overlay) overlay.remove();
+  document.removeEventListener('keydown', sfPreviewEscHandler);
+}
+function sfRenderPreviewBody(){
+  const body = document.getElementById('sf-modal-body');
+  if(!body) return;
+  const student = sfGetStudent();
+  if(sfState.previewTab==='summary'){
+    body.innerHTML = `<div class="sf-summary-wrap">${sfBuildSummary(sfState.formKey, student)}</div>`;
+  } else {
+    const html = sfState.formKey==='form1' ? sfPrintForm1(student) : sfPrintForm2(student);
+    body.innerHTML = `<div class="sf-preview-pages">${html}</div>`;
+  }
+}
+function sfOpenPreview(){
+  const student = sfGetStudent();
+  if(!student) return;
+  sfClosePreview();
+  sfState.previewTab = 'full';
+  const formTitle = sfState.formKey==='form1' ? 'แบบฟอร์มที่ 1 · ข้อมูลรายบุคคล' : 'แบบฟอร์มที่ 2 · ผลการเรียน/ความประพฤติ/การใช้จ่าย';
+  const overlay = document.createElement('div');
+  overlay.className = 'sf-modal-overlay';
+  overlay.id = 'sf-preview-overlay';
+  overlay.innerHTML = `
+    <div class="sf-modal">
+      <div class="sf-modal-header">
+        <div class="sf-modal-header-left">
+          <span class="sf-modal-icon">📄</span>
+          <div>
+            <div class="sf-modal-title">${sfEscapeHtml(student.name||'(ยังไม่ระบุชื่อ)')}</div>
+            <div class="sf-modal-sub">${sfEscapeHtml(formTitle)}</div>
+          </div>
+        </div>
+        <button type="button" class="sf-modal-close" data-sf-action="close-preview" aria-label="ปิด">×</button>
+      </div>
+      <div class="sf-modal-tabs">
+        <button type="button" class="sf-modal-tab active" data-sf-action="preview-tab" data-sf-tab="full">📄 เต็มตามแบบฟอร์ม</button>
+        <button type="button" class="sf-modal-tab" data-sf-action="preview-tab" data-sf-tab="summary">⚡ สรุปย่อ</button>
+      </div>
+      <div class="sf-modal-body" id="sf-modal-body"></div>
+      <div class="sf-modal-footer">
+        <button type="button" class="sf-btn sf-btn-secondary" data-sf-action="close-preview">ปิด</button>
+        <button type="button" class="sf-btn sf-btn-primary" data-sf-action="do-print">🖨️ พิมพ์ / บันทึก PDF</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  sfRenderPreviewBody();
+  overlay.addEventListener('click', function(e){
+    if(e.target===overlay){ sfClosePreview(); return; }
+    const btn = e.target.closest('[data-sf-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-sf-action');
+    if(action==='close-preview') sfClosePreview();
+    else if(action==='do-print') sfPrintCurrentForm();
+    else if(action==='preview-tab'){
+      sfState.previewTab = btn.getAttribute('data-sf-tab');
+      overlay.querySelectorAll('.sf-modal-tab').forEach(t=>t.classList.toggle('active', t.getAttribute('data-sf-tab')===sfState.previewTab));
+      sfRenderPreviewBody();
+    }
+  });
+  document.addEventListener('keydown', sfPreviewEscHandler);
+}
+
+/* ---------------- GOOGLE SHEET EXPORT ---------------- */
+function sfFlattenFormForSheet(formKey, student){
+  const sections = sfGetSections(formKey);
+  const rows = [];
+  sections.forEach(section=>{
+    section.fields.forEach(f=>{
+      if(f.type==='heading'||f.type==='note') return;
+      let val = '';
+      if(f.type==='text'||f.type==='number'||f.type==='date'||f.type==='textarea'){
+        val = sfPText(formKey, f.id);
+      } else if(f.type==='radio'){
+        val = sfPChoiceText(formKey, f.id);
+      } else if(f.type==='checkboxgroup'){
+        const v = sfPV(formKey, f.id); const sel=(v&&v.selected)||[];
+        val = sel.map(s=> s==='__other__' ? (v.other||'') : s).filter(Boolean).join(', ');
+      } else if(f.type==='table'){
+        const arr = sfPV(formKey, f.id)||[];
+        val = arr.filter(r=>Object.values(r.cells||{}).some(Boolean))
+          .map(r=> f.columns.map(c=>(r.cells&&r.cells[c.id])?`${c.label}:${r.cells[c.id]}`:'').filter(Boolean).join(' / '))
+          .join('  |  ');
+      } else if(f.type==='matrix'){
+        const m = sfPV(formKey, f.id);
+        if(m && m.cols){
+          val = f.rows.map(r=>{
+            const cellsTxt = m.cols.map(c=>{
+              const cv = (m.values[r.id]&&m.values[r.id][c._id])||'';
+              return cv ? `${c.label||'ระดับชั้น/ปี'}=${cv}` : '';
+            }).filter(Boolean).join(', ');
+            return cellsTxt ? `${r.label}: ${cellsTxt}` : '';
+          }).filter(Boolean).join('  |  ');
+        }
+      }
+      if(val) rows.push({ section: section.title, label: f.label, value: val });
+    });
+  });
+  return rows;
+}
+async function sfSendToSheet(btn){
+  const student = sfGetStudent();
+  if(!student) return;
+  if(typeof SCRIPT_URL==='undefined' || !SCRIPT_URL || SCRIPT_URL==='https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec'){
+    showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในระบบ', 'error');
+    return;
+  }
+  const original = btn ? btn.textContent : '';
+  if(btn){ btn.textContent='⏳ กำลังส่ง...'; btn.disabled=true; }
+  try{
+    const fields = sfFlattenFormForSheet(sfState.formKey, student);
+    const formLabel = sfState.formKey==='form1' ? 'แบบฟอร์มที่ 1 - ข้อมูลรายบุคคล' : 'แบบฟอร์มที่ 2 - ผลการเรียน ความประพฤติ การใช้จ่าย';
+    const payload = {
+      action: 'saveScholarshipForm',
+      formType: sfState.formKey,
+      formLabel: formLabel,
+      studentId: student.id || '',
+      studentNo: student.no || '',
+      studentName: student.name || '',
+      school: student.school_m1 || '',
+      province: student.province || '',
+      updatedAt: new Date().toISOString(),
+      fields: fields
+    };
+    const result = await gasPost(payload);
+    showStatus('☁️ ส่ง'+formLabel+' ของ '+(student.name||'นักเรียน')+' ไปยัง Google Sheet แล้ว'+(result&&result.sheetName?' (ชีต: '+result.sheetName+')':''), 'success');
+  } catch(err){
+    showStatus('⚠️ ส่งไป Google Sheet ไม่สำเร็จ: '+err.message, 'error');
+  } finally {
+    if(btn){ btn.textContent=original; btn.disabled=false; }
+  }
+}
+
 </script>
 
 <!-- สคริปต์สำหรับอัปเดต URL รูปภาพจาก Excel โดยอัตโนมัติ -->
