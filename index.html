@@ -3242,7 +3242,7 @@ async function gasPost(body) {
 
 // ─── โหลดครั้งแรก ─────────────────────────────────────────
 async function loadFromSheet(silent = false) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
+  if (!SCRIPT_URL) {
     if (!silent) showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ใน index.html', 'error');
     return false;
   }
@@ -3400,7 +3400,7 @@ function flashSyncDot() {
 
 // ─── บันทึก 1 คน (optimistic + upsert) ───────────────────
 async function saveStudentToSheet(idx) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') return;
+  if (!SCRIPT_URL) return;
   const s = DB.students[idx];
   if (!s) return;
   _isSaving = true;
@@ -3449,7 +3449,7 @@ async function saveStudentToSheet(idx) {
 
 // ─── บันทึกทุกคน (import / reset) ────────────────────────
 async function saveAllToSheet() {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
+  if (!SCRIPT_URL) {
     showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL', 'error'); return;
   }
   if (!confirm('บันทึกข้อมูลทั้งหมด (' + DB.students.length + ' คน) ไปยัง Google Sheet?\n⚠️ จะเขียนทับข้อมูลทั้งหมดใน Sheet')) return;
@@ -3473,7 +3473,7 @@ async function saveAllToSheet() {
 
 // ─── ลบออกจาก Sheet ───────────────────────────────────────
 async function deleteStudentFromSheet(studentId, studentData) {
-  if (!SCRIPT_URL || SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') return;
+  if (!SCRIPT_URL) return;
   try {
     // 1) ล้าง GPA rows ของนักเรียนคนนี้ก่อน (ส่ง semGpa=[])
     if (studentData) {
@@ -3669,7 +3669,7 @@ function deleteStudent(idx) {
   populateFilters();
   startNavAvatarRotation();
   // โหลดข้อมูลจาก Sheet อัตโนมัติเมื่อเปิดหน้า (silent ถ้ายังไม่ตั้ง URL)
-  if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec') {
+  if (SCRIPT_URL) {
     loadFromSheet(false);
   } else {
     showStatus('💡 ตั้งค่า SCRIPT_URL ใน index.html เพื่อเชื่อมต่อ Google Sheet', 'info');
@@ -5011,7 +5011,7 @@ function sfFlattenFormForSheet(formKey, student){
 async function sfSendToSheet(btn){
   const student = sfGetStudent();
   if(!student) return;
-  if(typeof SCRIPT_URL==='undefined' || !SCRIPT_URL || SCRIPT_URL==='https://script.google.com/macros/s/AKfycbzytJf5cvW3hxcMCDByruDk4NiQFkZBxpA9tlj6eAZFgSA-9S3K5gQR_zH1RGBTVoBssQ/exec'){
+  if(typeof SCRIPT_URL==='undefined' || !SCRIPT_URL){
     showStatus('⚠️ ยังไม่ได้ตั้งค่า SCRIPT_URL ในระบบ', 'error');
     return;
   }
